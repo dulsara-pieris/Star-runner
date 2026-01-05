@@ -524,7 +524,7 @@ on_exit() {
 EOF
   printf "$COLOR_NEUTRAL"
   printf "\n${COLOR_MAGENTA}╔═══════════════════════════════════════════════════════╗${COLOR_NEUTRAL}\n"
-  printf "${COLOR_MAGENTA}║${COLOR_NEUTRAL}              MISSION COMPLETE - STATS                 ${COLOR_MAGENTA}║${COLOR_NEUTRAL}\n"
+  printf "${COLOR_MAGENTA}║${COLOR_NEUTRAL}              MISSION OVER - STATS                     ${COLOR_MAGENTA}║${COLOR_NEUTRAL}\n"
   printf "${COLOR_MAGENTA}╚═══════════════════════════════════════════════════════╝${COLOR_NEUTRAL}\n\n"
   printf "  ${COLOR_YELLOW}⚡ Final Score:${COLOR_NEUTRAL} $score\n"
   printf "  ${COLOR_CYAN}◇ Crystals Collected:${COLOR_NEUTRAL} $crystals_collected\n"
@@ -639,7 +639,7 @@ while true; do
     fi
 
     # Spawning
-    if (( frame % 5 == 0 )); then
+    if (( frame % 3 == 0 )); then
       spawn_asteroid
     fi
 
