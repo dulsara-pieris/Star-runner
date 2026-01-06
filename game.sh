@@ -267,10 +267,23 @@ spawn_asteroid() {
   line=$(get_random_number 10 $((NUM_LINES - 10)))
   column=$((NUM_COLUMNS - 1))
   size=$(get_random_number 1 3)
+  
+  # Determine asteroid type based on level
+  if [ "$level" -ge 3 ]; then
+    type_chance=$(get_random_number 1 10)
+    if [ "$type_chance" -le 3 ]; then
+      asteroid_type=2  # UFO
+    else
+      asteroid_type=1  # Regular
+    fi
+  else
+    asteroid_type=1  # Regular
+  fi
 
   eval "asteroid_${i}_line=$line"
   eval "asteroid_${i}_col=$column"
   eval "asteroid_${i}_size=$size"
+  eval "asteroid_${i}_type=$asteroid_type"
   eval "asteroid_${i}_active=1"
 }
 
@@ -294,7 +307,12 @@ spawn_powerup() {
     if [ "$chance" = 1 ]; then
       line=$(get_random_number 3 $((NUM_LINES - 2)))
       column=$((NUM_COLUMNS - 2))
-      powerup_type=$(get_random_number 1 3)
+      # More powerup types now
+      if [ "$level" -ge 4 ]; then
+        powerup_type=$(get_random_number 1 5)
+      else
+        powerup_type=$(get_random_number 1 3)
+      fi
       powerup_line=$line
       powerup_col=$column
       powerup_active=1
@@ -311,31 +329,58 @@ move_asteroids() {
       eval "line=\$asteroid_${i}_line"
       eval "col=\$asteroid_${i}_col"
       eval "size=\$asteroid_${i}_size"
+      eval "type=\$asteroid_${i}_type"
       
       # Clear old position
       move_cursor "$line" "$col"
       case $size in
-        1) printf "  " ;;
-        2) printf "   " ;;
-        3) printf "    " ;;
+        1) printf "   " ;;
+        2) printf "    " ;;
+        3) printf "     " ;;
       esac
       
-      # Move left
-      col=$((col - 1))
+      # UFO movement (type 2) - diagonal and tracks player
+      if [ "$type" = 2 ]; then
+        col=$((col - 1))
+        
+        # Move toward player
+        if [ "$line" -lt "$ship_line" ]; then
+          line=$((line + 1))
+        elif [ "$line" -gt "$ship_line" ]; then
+          line=$((line - 1))
+        fi
+      else
+        # Regular asteroid movement - affected by speed multiplier
+        move_speed=$((1 + speed_multiplier / 2))
+        col=$((col - move_speed))
+      fi
       
       if [ "$col" -lt 1 ]; then
         eval "asteroid_${i}_active=0"
       else
         eval "asteroid_${i}_col=$col"
+        eval "asteroid_${i}_line=$line"
         
         # Draw at new position
         move_cursor "$line" "$col"
-        printf "$COLOR_RED"
-        case $size in
-          1) printf "◆" ;;
-          2) printf "◈◈" ;;
-          3) printf "◈◆◈" ;;
-        esac
+        
+        if [ "$type" = 2 ]; then
+          # UFO
+          printf "$COLOR_MAGENTA"
+          case $size in
+            1) printf "⊕" ;;
+            2) printf "◉◉" ;;
+            3) printf "◉⊕◉" ;;
+          esac
+        else
+          # Regular asteroid
+          printf "$COLOR_RED"
+          case $size in
+            1) printf "◆" ;;
+            2) printf "◈◈" ;;
+            3) printf "◈◆◈" ;;
+          esac
+        fi
         printf "$COLOR_NEUTRAL"
       fi
     fi
@@ -364,7 +409,7 @@ move_powerup() {
   if [ "$powerup_active" = 1 ]; then
     # Clear old
     move_cursor "$powerup_line" "$powerup_col"
-    printf " "
+    printf "  "
     
     powerup_col=$((powerup_col - 1))
     
@@ -376,27 +421,59 @@ move_powerup() {
         1) printf "${COLOR_YELLOW}☢${COLOR_NEUTRAL}" ;;
         2) printf "${COLOR_MAGENTA}◈${COLOR_NEUTRAL}" ;;
         3) printf "${COLOR_GREEN}⊕${COLOR_NEUTRAL}" ;;
+        4) printf "${COLOR_CYAN}⚡${COLOR_NEUTRAL}" ;;  # Spread shot
+        5) printf "${COLOR_WHITE}◇${COLOR_NEUTRAL}" ;;  # Rapid fire
       esac
     fi
   fi
 }
 
 fire_weapon() {
-  if (( laser_active == 0 && ammo > 0 )); then
-    laser_line=$ship_line
-    laser_col=$((ship_column + 2))
-    laser_active=1
-    ((ammo--))
+  if [ "$weapon_type" = 1 ]; then
+    # Normal single shot
+    if [ "$laser_active" = 0 ] && [ "$ammo" -gt 0 ]; then
+      laser_line=$ship_line
+      laser_col=$((ship_column + 2))
+      laser_active=1
+      ammo=$((ammo - 1))
+    fi
+  elif [ "$weapon_type" = 2 ]; then
+    # Spread shot (3 lasers)
+    if [ "$laser_active" = 0 ] && [ "$laser2_active" = 0 ] && [ "$laser3_active" = 0 ] && [ "$ammo" -ge 3 ]; then
+      laser_line=$ship_line
+      laser_col=$((ship_column + 2))
+      laser_active=1
+      
+      laser2_line=$((ship_line - 1))
+      laser2_col=$((ship_column + 2))
+      laser2_active=1
+      
+      laser3_line=$((ship_line + 1))
+      laser3_col=$((ship_column + 2))
+      laser3_active=1
+      
+      ammo=$((ammo - 3))
+    fi
+  elif [ "$weapon_type" = 3 ]; then
+    # Rapid fire (can shoot continuously)
+    if [ "$ammo" -gt 0 ]; then
+      if [ "$laser_active" = 0 ]; then
+        laser_line=$ship_line
+        laser_col=$((ship_column + 2))
+        laser_active=1
+        ammo=$((ammo - 1))
+      fi
+    fi
   fi
 }
 
 move_laser() {
+  # Laser 1
   if [ "$laser_active" = 1 ]; then
-    # Clear old
     move_cursor "$laser_line" "$laser_col"
     printf " "
     
-    laser_col=$((laser_col + 1))
+    laser_col=$((laser_col + 2))
     
     if [ "$laser_col" -ge "$NUM_COLUMNS" ]; then
       laser_active=0
@@ -405,47 +482,101 @@ move_laser() {
       printf "${COLOR_YELLOW}━${COLOR_NEUTRAL}"
     fi
   fi
+  
+  # Laser 2 (spread shot)
+  if [ "$laser2_active" = 1 ]; then
+    move_cursor "$laser2_line" "$laser2_col"
+    printf " "
+    
+    laser2_col=$((laser2_col + 2))
+    
+    if [ "$laser2_col" -ge "$NUM_COLUMNS" ]; then
+      laser2_active=0
+    else
+      move_cursor "$laser2_line" "$laser2_col"
+      printf "${COLOR_YELLOW}━${COLOR_NEUTRAL}"
+    fi
+  fi
+  
+  # Laser 3 (spread shot)
+  if [ "$laser3_active" = 1 ]; then
+    move_cursor "$laser3_line" "$laser3_col"
+    printf " "
+    
+    laser3_col=$((laser3_col + 2))
+    
+    if [ "$laser3_col" -ge "$NUM_COLUMNS" ]; then
+      laser3_active=0
+    else
+      move_cursor "$laser3_line" "$laser3_col"
+      printf "${COLOR_YELLOW}━${COLOR_NEUTRAL}"
+    fi
+  fi
 }
 
 check_laser_hits() {
-  if [ "$laser_active" = 0 ]; then
-    return
-  fi
-  
-  i=1
-  while [ $i -le "$asteroid_count" ]; do
-    eval "active=\$asteroid_${i}_active"
+  # Check all three lasers
+  for laser_num in 1 2 3; do
+    eval "laser_is_active=\$laser${laser_num}_active"
+    [ "$laser_num" = 1 ] && laser_is_active=$laser_active
     
-    if [ "$active" = 1 ]; then
-      eval "line=\$asteroid_${i}_line"
-      eval "col=\$asteroid_${i}_col"
-      eval "size=\$asteroid_${i}_size"
+    if [ "$laser_is_active" = 0 ]; then
+      continue
+    fi
+    
+    eval "current_laser_line=\$laser${laser_num}_line"
+    eval "current_laser_col=\$laser${laser_num}_col"
+    [ "$laser_num" = 1 ] && current_laser_line=$laser_line && current_laser_col=$laser_col
+    
+    i=1
+    while [ $i -le "$asteroid_count" ]; do
+      eval "active=\$asteroid_${i}_active"
       
-      if [ "$laser_line" = "$line" ]; then
-        if [ "$laser_col" -ge "$col" ] && [ "$laser_col" -le $((col + size)) ]; then
-          # Hit!
-          eval "asteroid_${i}_active=0"
-          laser_active=0
-          score=$((score + 10))
-          asteroids_destroyed=$((asteroids_destroyed + 1))
-          
-          # Clear asteroid
-          move_cursor "$line" "$col"
-          case $size in
-            1) printf "  " ;;
-            2) printf "   " ;;
-            3) printf "    " ;;
-          esac
-          
-          # Explosion effect
-          move_cursor "$line" "$col"
-          printf "${COLOR_YELLOW}✶${COLOR_NEUTRAL}"
-          
-          return
+      if [ "$active" = 1 ]; then
+        eval "line=\$asteroid_${i}_line"
+        eval "col=\$asteroid_${i}_col"
+        eval "size=\$asteroid_${i}_size"
+        eval "type=\$asteroid_${i}_type"
+        
+        if [ "$current_laser_line" = "$line" ]; then
+          if [ "$current_laser_col" -ge "$col" ] && [ "$current_laser_col" -le $((col + size)) ]; then
+            # Hit!
+            eval "asteroid_${i}_active=0"
+            
+            if [ "$laser_num" = 1 ]; then
+              laser_active=0
+            elif [ "$laser_num" = 2 ]; then
+              laser2_active=0
+            else
+              laser3_active=0
+            fi
+            
+            # UFOs worth more points
+            if [ "$type" = 2 ]; then
+              score=$((score + 20))
+            else
+              score=$((score + 10))
+            fi
+            asteroids_destroyed=$((asteroids_destroyed + 1))
+            
+            # Clear asteroid
+            move_cursor "$line" "$col"
+            case $size in
+              1) printf "   " ;;
+              2) printf "    " ;;
+              3) printf "     " ;;
+            esac
+            
+            # Explosion effect
+            move_cursor "$line" "$col"
+            printf "${COLOR_YELLOW}✶${COLOR_NEUTRAL}"
+            
+            break
+          fi
         fi
       fi
-    fi
-    i=$((i + 1))
+      i=$((i + 1))
+    done
   done
 }
 
@@ -459,6 +590,7 @@ check_collisions() {
       eval "line=\$asteroid_${i}_line"
       eval "col=\$asteroid_${i}_col"
       eval "size=\$asteroid_${i}_size"
+      eval "type=\$asteroid_${i}_type"
       
       if [ "$ship_line" = "$line" ]; then
         if [ "$ship_column" -ge "$col" ] && [ "$ship_column" -le $((col + size)) ]; then
@@ -467,18 +599,18 @@ check_collisions() {
             eval "asteroid_${i}_active=0"
             move_cursor "$line" "$col"
             case $size in
-              1) printf "  " ;;
-              2) printf "   " ;;
-              3) printf "    " ;;
+              1) printf "   " ;;
+              2) printf "    " ;;
+              3) printf "     " ;;
             esac
           elif [ "$super_mode_active" = 1 ]; then
             eval "asteroid_${i}_active=0"
             score=$((score + 5))
             move_cursor "$line" "$col"
             case $size in
-              1) printf "  " ;;
-              2) printf "   " ;;
-              3) printf "    " ;;
+              1) printf "   " ;;
+              2) printf "    " ;;
+              3) printf "     " ;;
             esac
           else
             on_game_over
@@ -520,6 +652,14 @@ check_collisions() {
             ammo=$((ammo + 10))
             score=$((score + 20))
             ;;
+          4) # Spread shot
+            weapon_type=2
+            weapon_timer=0
+            ;;
+          5) # Rapid fire
+            weapon_type=3
+            weapon_timer=0
+            ;;
         esac
       fi
     fi
@@ -542,29 +682,52 @@ update_timers() {
       super_timer=0
     fi
   fi
+  
+  # Weapon powerup timer
+  if [ "$weapon_type" -ne 1 ]; then
+    weapon_timer=$((weapon_timer + 1))
+    if [ "$weapon_timer" -ge 40 ]; then
+      weapon_type=1
+      weapon_timer=0
+    fi
+  fi
 }
 
 draw_hud() {
   printf "$COLOR_YELLOW"
   move_cursor 2 5
-  printf "SCORE: $score"
+  printf "SCORE: $score | LVL: $level"
   
-  move_cursor 2 20
+  move_cursor 2 30
   printf "AMMO: $ammo"
   
-  move_cursor 2 35
+  move_cursor 2 45
   printf "CRYSTALS: $crystals_collected"
+  
+  col_offset=60
   
   if [ "$shield_active" = 1 ]; then
     printf "$COLOR_CYAN"
-    move_cursor 2 50
+    move_cursor 2 $col_offset
     printf "⟨SHIELD⟩"
+    col_offset=$((col_offset + 10))
   fi
   
   if [ "$super_mode_active" = 1 ]; then
     printf "$COLOR_YELLOW"
-    move_cursor 2 65
+    move_cursor 2 $col_offset
     printf "⟨SUPER⟩"
+    col_offset=$((col_offset + 9))
+  fi
+  
+  if [ "$weapon_type" = 2 ]; then
+    printf "$COLOR_CYAN"
+    move_cursor 2 $col_offset
+    printf "⟨SPREAD⟩"
+  elif [ "$weapon_type" = 3 ]; then
+    printf "$COLOR_WHITE"
+    move_cursor 2 $col_offset
+    printf "⟨RAPID⟩"
   fi
   
   printf "$COLOR_NEUTRAL"
@@ -699,15 +862,22 @@ show_help() {
   printf "  [Q]        - Quit mission\n\n"
   printf "${COLOR_GREEN}OBJECTIVE:${COLOR_NEUTRAL}\n"
   printf "  Navigate through space, dodge asteroids, collect crystals!\n"
-  printf "  Destroy asteroids with your laser for bonus points.\n\n"
+  printf "  Destroy asteroids with your laser for bonus points.\n"
+  printf "  Game gets harder as you level up!\n\n"
   printf "${COLOR_CYAN}COLLECTIBLES:${COLOR_NEUTRAL}\n"
   printf "  ${COLOR_CYAN}◇${COLOR_NEUTRAL}  Power Crystal - +50 points, +5 ammo\n\n"
   printf "${COLOR_MAGENTA}POWER-UPS:${COLOR_NEUTRAL}\n"
   printf "  ${COLOR_YELLOW}☢${COLOR_NEUTRAL}  Shield - Absorb one hit\n"
   printf "  ${COLOR_MAGENTA}◈${COLOR_NEUTRAL}  Super Mode - Invincibility + destroy asteroids on contact\n"
-  printf "  ${COLOR_GREEN}⊕${COLOR_NEUTRAL}  Ammo Pack - +10 laser shots, +20 points\n\n"
+  printf "  ${COLOR_GREEN}⊕${COLOR_NEUTRAL}  Ammo Pack - +10 laser shots, +20 points\n"
+  printf "  ${COLOR_CYAN}⚡${COLOR_NEUTRAL}  Spread Shot - Fire 3 lasers at once (temporary)\n"
+  printf "  ${COLOR_WHITE}◇${COLOR_NEUTRAL}  Rapid Fire - Shoot continuously (temporary)\n\n"
   printf "${COLOR_RED}HAZARDS:${COLOR_NEUTRAL}\n"
-  printf "  ${COLOR_RED}◆ ◈◈ ◈◆◈${COLOR_NEUTRAL}  Asteroids of various sizes\n\n"
+  printf "  ${COLOR_RED}◆ ◈◈ ◈◆◈${COLOR_NEUTRAL}  Asteroids (10 pts each)\n"
+  printf "  ${COLOR_MAGENTA}⊕ ◉◉ ◉⊕◉${COLOR_NEUTRAL}  UFOs - Track your position! (20 pts each)\n\n"
+  printf "${COLOR_YELLOW}DIFFICULTY:${COLOR_NEUTRAL}\n"
+  printf "  Every 200 points = New Level\n"
+  printf "  Higher levels = Faster asteroids + UFO enemies\n\n"
   printf "${COLOR_GREEN}Good luck, pilot! 🚀${COLOR_NEUTRAL}\n\n"
 }
 
@@ -719,12 +889,18 @@ asteroid_count=0
 crystal_active=0
 powerup_active=0
 laser_active=0
+laser2_active=0
+laser3_active=0
 shield_active=0
 shield_timer=0
 super_mode_active=0
 super_timer=0
+weapon_type=1
+weapon_timer=0
 frame=0
 score=0
+level=1
+speed_multiplier=0
 crystals_collected=0
 asteroids_destroyed=0
 ammo=20
@@ -774,15 +950,33 @@ while true; do
 
     handle_input
 
+    # Level progression
+    new_level=$((score / 200 + 1))
+    if [ "$new_level" -ne "$level" ]; then
+      level=$new_level
+      speed_multiplier=$((level - 1))
+      
+      # Level up notification
+      printf "$COLOR_GREEN"
+      center_col=$((NUM_COLUMNS / 2 - 10))
+      center_line=$((NUM_LINES / 2))
+      move_cursor $center_line $center_col
+      printf " ★ LEVEL $level ★ "
+      printf "$COLOR_NEUTRAL"
+    fi
+
     # Background
     frame_mod_10=$((frame % 10))
     if [ "$frame_mod_10" -eq 0 ]; then
       draw_stars
     fi
 
-    # Spawning
-    frame_mod_3=$((frame % 3))
-    if [ "$frame_mod_3" -eq 0 ]; then
+    # Spawning - faster at higher levels
+    spawn_frequency=$((4 - speed_multiplier))
+    [ "$spawn_frequency" -lt 2 ] && spawn_frequency=2
+    
+    frame_mod_spawn=$((frame % spawn_frequency))
+    if [ "$frame_mod_spawn" -eq 0 ]; then
       spawn_asteroid
     fi
 
