@@ -1,4 +1,6 @@
 #!/bin/sh
+#SYNAPSNEX OSS-Protection License (SOPL) v1.0
+#Copyright (c) 2026 Dulsara Pieris
 
 # shellcheck disable=2059
 
