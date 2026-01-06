@@ -18,6 +18,9 @@ the following conditions:
    Modifications are permitted under the following conditions:
    a) Modified versions must be clearly marked as modified.
    b) Modified versions must not claim to be the original Software.
+   c) Any modifications must include **credit to the modifier**, which must be 
+      displayed in the software itself (e.g., printed in the console, splash 
+      screen, UI, or other visible output) so that users can see who made the changes.
 
 3. Open Source Protection
    The Software, or any modified version, may not be used to:
@@ -34,7 +37,8 @@ the following conditions:
    Redistribution of the Software, whether modified or unmodified, is allowed 
    only if:
    a) This license text is included, and
-   b) Proper attribution to the original author is maintained.
+   b) Proper attribution to the original author and any modifiers is maintained, 
+      including visible attribution in the software output for any modifications.
 
 5. Trademark & Naming
    The name of the original project and the author's name may not be used to 
