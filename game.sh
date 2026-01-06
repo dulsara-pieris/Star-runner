@@ -66,12 +66,20 @@ init_profile() {
       case $player_gender_input in
         [Mm]|[Mm]ale)
           player_gender="Male"
-          player_title="Mr."
+          if [ "$player_age" -lt 18 ]; then
+            player_title="Boy"
+          else
+            player_title="Mr."
+          fi
           break
           ;;
         [Ff]|[Ff]emale)
           player_gender="Female"
-          player_title="Mrs."
+          if [ "$player_age" -lt 18 ]; then
+            player_title="Girl"
+          else
+            player_title="Mrs."
+          fi
           break
           ;;
         *)
