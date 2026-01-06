@@ -35,3 +35,8 @@ To run this game, you need:
    Open your terminal and run the following command to allow the script to run:
    ```bash
    chmod +x star_runner.sh
+
+### Key,Action
+**Arrow Keys** "Navigate Ship (Up, Down, Left, Right)"
+**Spacebar** Fire Laser (Uses 1 Ammo)
+**Q** Quit & Save Stats
