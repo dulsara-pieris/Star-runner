@@ -4,6 +4,40 @@
 
 # STAR RUNNER - Navigate through space, dodge asteroids, collect power crystals!
 
+
+#profile file
+SAVE_DIR="$HOME/.star_runner"
+PROFILE_FILE="$SAVE_DIR/player_profile"
+mkdir -p "$SAVE_DIR"
+
+init_profile() {
+  if [ ! -f "$PROFILE_FILE" ]; then
+    echo "Welcome, pilot! Let's create your profile."
+    
+    read -rp "Enter your name: " player_name
+    read -rp "Enter your age: " player_age
+    read -rp "Enter your gender: " player_gender
+
+    # Default game stats
+    score=0
+    crystals_collected=0
+    asteroids_destroyed=0
+    ammo=20
+
+    # Save initial profile
+    save_profile
+  else
+    load_profile
+  fi
+}
+load_profile() {
+  if [ -f "$PROFILE_FILE" ]; then
+    # shellcheck disable=SC1090
+    source "$PROFILE_FILE"
+  fi
+}
+
+
 # Constants
 COLOR_BLUE='\e[1;34m'
 COLOR_GREEN='\e[1;32m'
@@ -511,7 +545,7 @@ on_exit() {
   show_cursor
   stty icanon echo
   printf "$COLOR_CYAN"
-
+  
   cat << "EOF"
 
     ███████╗████████╗ █████╗ ██████╗     ██████╗ ██╗   ██╗███╗   ██╗███╗   ██╗███████╗██████╗ 
@@ -530,6 +564,12 @@ EOF
   printf "  ${COLOR_CYAN}◇ Crystals Collected:${COLOR_NEUTRAL} $crystals_collected\n"
   printf "  ${COLOR_RED}◆ Asteroids Destroyed:${COLOR_NEUTRAL} $asteroids_destroyed\n"
   printf "  ${COLOR_GREEN}☆ Rank:${COLOR_NEUTRAL} "
+  printf ""
+  printf "Profile"
+  printf "${COLOR_CYAN}Pilot: ${COLOR_GREEN}$player_name${COLOR_NEUTRAL}\n"
+  printf "${COLOR_YELLOW}Age: ${COLOR_NEUTRAL}$player_age  ${COLOR_MAGENTA}Gender: ${COLOR_NEUTRAL}$player_gender\n"
+  printf "${COLOR_YELLOW}Score: ${COLOR_NEUTRAL}$score  Crystals: ${COLOR_CYAN}$crystals_collected${COLOR_NEUTRAL}\n"
+
   
   if [ "$score" -lt 100 ]; then
     printf "${COLOR_WHITE}Cadet${COLOR_NEUTRAL}\n"
@@ -574,10 +614,6 @@ show_help() {
 # Game variables
 ship_line=$((NUM_LINES / 2))
 ship_column=5
-score=0
-ammo=20
-crystals_collected=0
-asteroids_destroyed=0
 paused=0
 asteroid_count=0
 crystal_active=0

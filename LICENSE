@@ -1,0 +1,45 @@
+Open Source Attribution & OSS-Protection License (OSAPL) v1.0
+
+Copyright (c) 2026 Dulsara Pieris
+
+Permission is hereby granted to any person obtaining a copy
+of this software and associated documentation files (the "Software"),
+to use, study, modify, use commercially, and redistribute the Software,
+subject to the following conditions:
+
+1. Attribution
+   Any use, modification, or redistribution must include clear
+   credit to the original author:
+   "Original project by Dulsara Pieris".
+
+2. Modification
+   Modification is permitted provided that:
+   a) Modified versions are clearly marked as modified.
+   b) Modified versions do not claim to be the original Software.
+
+3. Open Source Protection
+   The Software or any modified version may NOT be used to:
+   a) Defame, falsely blame, or intentionally misrepresent
+      open-source software, open-source projects, developers,
+      or communities.
+   b) Spread false or misleading claims about open-source software.
+   c) Damage the reputation of open-source ecosystems through
+      deceptive or malicious modification.
+
+   Criticism, comparison, or analysis of closed-source or
+   proprietary software is explicitly permitted.
+
+4. Redistribution
+   Redistribution of the Software, modified or unmodified,
+   is permitted only if this license and attribution notice
+   are included.
+
+5. Trademark & Naming
+   The name of the original project and the author's name
+   may not be used to endorse or promote derived products
+   without explicit permission.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED. IN NO EVENT SHALL THE AUTHOR BE LIABLE
+FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE
+OF THE SOFTWARE.
