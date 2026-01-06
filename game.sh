@@ -616,23 +616,42 @@ toggle_pause() {
     printf "               "
   fi
 }
-
 on_exit() {
-  # Update profile with new high score if applicable
+  # 1. Update and Save Data
   if [ -n "$player_name" ]; then
+    # Update high score if mission score is higher
     if [ "$score" -gt "$high_score" ]; then
       high_score=$score
     fi
+    
+    # Add mission stats to career totals
     total_crystals=$((total_crystals + crystals_collected))
     total_asteroids=$((total_asteroids + asteroids_destroyed))
+    
+    # Save to local profile file
     save_profile
+    
+    # --- CLOUD SYNC SECTION ---
+    safe_name=$(echo "$player_name" | tr -d '[:space:][:punct:]')
+    
+    # Send only the score to your KVdb bucket
+    # -m 5: timeout after 5 seconds
+    # -s: silent mode
+    # -o /dev/null: hide technical output
+    # --data-raw: ensure the number is sent exactly
+    curl -s -m 5 -o /dev/null -X POST \
+         --data-raw "$score" \
+         "https://kvdb.io/HKnPR6HRekZq7J327tEQfa/player_$safe_name"
+    # --- END CLOUD SYNC ---
   fi
   
+  # 2. Restore Terminal State
   hide_alternate_screen
   show_cursor
   stty icanon echo
-  printf "$COLOR_CYAN"
   
+  # 3. Display Final Results UI
+  printf "$COLOR_CYAN"
   cat << "EOF"
 
     ███████╗████████╗ █████╗ ██████╗     ██████╗ ██╗   ██╗███╗   ██╗███╗   ██╗███████╗██████╗ 
@@ -655,7 +674,7 @@ EOF
   if [ -n "$player_name" ]; then
     current_year=2026
     player_age=$((current_year - player_birth_year))
-    printf "  ${COLOR_CYAN}👤 Pilot:${COLOR_NEUTRAL} ${COLOR_GREEN}${player_title} ${player_name}${COLOR_NEUTRAL} (Age: $player_age, Born: $player_birth_year, Gender: $player_gender)\n\n"
+    printf "  ${COLOR_CYAN}👤 Pilot:${COLOR_NEUTRAL} ${COLOR_GREEN}${player_title} ${player_name}${COLOR_NEUTRAL} (Age: $player_age)\n"
     printf "  ${COLOR_MAGENTA}📊 Career Stats:${COLOR_NEUTRAL}\n"
     printf "  ${COLOR_YELLOW}🏆 High Score:${COLOR_NEUTRAL} $high_score\n"
     printf "  ${COLOR_CYAN}💎 Total Crystals:${COLOR_NEUTRAL} $total_crystals\n"
@@ -678,9 +697,9 @@ EOF
   
   printf "\n  ${COLOR_CYAN}Created by Dulsara(SYNAPSNEX)${COLOR_NEUTRAL}\n"
   printf "  ${COLOR_YELLOW}dulsara.synapsnex@gmail.com${COLOR_NEUTRAL}\n\n"
+  
   exit
 }
-
 show_help() {
   printf "${COLOR_CYAN}╔═══════════════════════════════════════════════════╗${COLOR_NEUTRAL}\n"
   printf "${COLOR_CYAN}║${COLOR_NEUTRAL}         STAR RUNNER - MISSION BRIEFING               ${COLOR_CYAN}║${COLOR_NEUTRAL}\n"
