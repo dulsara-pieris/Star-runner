@@ -29,8 +29,8 @@ Violations of this Code of Conduct are taken seriously and may result in:
 
 ## Reporting
 If you observe violations, please contact the maintainers through the repository’s issue tracker or email:
-- Email: [your contact email]
-- GitHub Issues: [repository link]
+- Email: dulsara.synapsnex@gmail.com
+- GitHub Issues: https://github.com/dulsara-pieris/Bash-game
 
 ## Attribution & Respect
 This project respects the creators of all software. Please do the same.
