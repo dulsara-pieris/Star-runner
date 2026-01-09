@@ -188,7 +188,7 @@ get_ship_ammo() {
 
 get_ship_price() {
   case $1 in
-    1) printf "0" ;;    # Free starter
+    1) printf "0" ;;
     2) printf "150" ;;
     3) printf "300" ;;
     4) printf "500" ;;
