@@ -1,16 +1,30 @@
 #!/usr/bin/env bash
 set -e
 
-APP="star-runner"
-TMP="$(mktemp -d)"
+# Detect the folder where install.sh is located
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "Downloading $APP release..."
-curl -sSL "https://github.com/dulsara-pieris/Bash-game/releases/download/v1.0.0/star-runner-1.0.0.tar.gz" | tar -xz -C "$TMP"
+INSTALL_DIR="/usr/local/share/star-runner"
 
-echo "Installing..."
-sudo bash "$TMP/Bash-game/install.sh"
+echo "Installing star-runner…"
 
-echo "Cleaning up..."
-rm -rf "$TMP"
+# Create install directory
+sudo mkdir -p "$INSTALL_DIR"
 
-echo "✔ Done! Run the game with: $APP"
+# Copy game.sh from this folder to the install directory
+sudo cp "$DIR/game.sh" "$INSTALL_DIR/"
+
+# Create launcher wrapper in /usr/local/bin
+sudo tee /usr/local/bin/star-runner > /dev/null << 'EOF'
+#!/usr/bin/env bash
+exec /usr/local/share/star-runner/game.sh "$@"
+EOF
+
+# Make the launcher executable
+sudo chmod +x /usr/local/bin/star-runner
+
+echo "✔ Installed to $INSTALL_DIR"
+echo "✔ Launcher created at /usr/local/bin/star-runner"
+echo
+echo "You can now run the game with:"
+echo "  star-runner"
