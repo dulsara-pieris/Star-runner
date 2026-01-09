@@ -28,8 +28,9 @@ To run this game, you need:
 
 ### 📝 Installation
 
-
-
+<pre align="center" style="font-family: 'Courier New', Courier, monospace;"> 
+curl -sSL https://raw.githubusercontent.com/dulsara-pieris/Bash-game/main/install.sh | sudo bash 
+<pre>
 
 ### Key,Action
 **Arrow Keys** "Navigate Ship (Up, Down, Left, Right)"
