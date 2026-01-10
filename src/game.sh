@@ -1450,7 +1450,7 @@ while :; do
       exit 0
       ;;
     -u|--update)
-      update
+      sudo update
       exit 0
       ;;
     --)
