@@ -1391,11 +1391,12 @@ update() {
   set -e
 
   INSTALL_DIR="/usr/local/share/Star-runner"
-
-  # Read version from file
   VERSION_FILE="$INSTALL_DIR/VERSION"
+
+  # Read version safely (strip newline)
   if [[ -f "$VERSION_FILE" ]]; then
     CURRENT_VERSION=$(<"$VERSION_FILE")
+    CURRENT_VERSION="${CURRENT_VERSION//$'\n'/}"  # remove newline
   else
     CURRENT_VERSION="unknown"
   fi
@@ -1413,11 +1414,12 @@ update() {
   git fetch origin
 
   if git merge --ff-only origin/main; then
-    # Update VERSION file in case new version changed it
+    # Read new version from VERSION file after update
     if [[ -f "$VERSION_FILE" ]]; then
       NEW_VERSION=$(<"$VERSION_FILE")
+      NEW_VERSION="${NEW_VERSION//$'\n'/}"
     else
-      NEW_VERSION="unknown"
+      NEW_VERSION="$CURRENT_VERSION"
     fi
     echo "✅ Update successful!"
     echo "🆕 New version: $NEW_VERSION"
