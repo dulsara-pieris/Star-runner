@@ -11,7 +11,7 @@
                                                                                                 
 EOF
 set -e
-
+pwd=pwd
 echo "Installing star-runner…"
 
 # Remove old install
@@ -34,3 +34,4 @@ sudo chmod +x /usr/local/bin/Star-runner
 
 echo "✔ star-runner installed!"
 echo "You can now run the game with: star-runner"
+cd $pwd
