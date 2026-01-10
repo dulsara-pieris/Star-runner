@@ -1381,7 +1381,7 @@ show_help() {
   printf "${COLOR_GREEN}Good luck, pilot! 🚀${COLOR_NEUTRAL}\n\n"
 }
 
-show_help() {
+update() {
 #!/usr/bin/env bash
   printf "$COLOR_CYAN"
   cat << "EOF"
