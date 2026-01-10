@@ -1392,31 +1392,39 @@ update() {
 
   INSTALL_DIR="/usr/local/share/Star-runner"
 
-  echo "🔄 Updating star-runner…"
-
-  # ✅ FIX: allow root-owned repo
-  git config --global --add safe.directory "$INSTALL_DIR"
-
-  if [[ ! -d "$INSTALL_DIR/.git" ]]; then
-    echo "❌ No git repository found. Cannot update safely."
-    exit 1
+  # Read version from file
+  VERSION_FILE="$INSTALL_DIR/VERSION"
+  if [[ -f "$VERSION_FILE" ]]; then
+    CURRENT_VERSION=$(<"$VERSION_FILE")
+  else
+    CURRENT_VERSION="unknown"
   fi
+
+  echo "🔄 Updating Star-runner…"
+  echo "📌 Current version: $CURRENT_VERSION"
+
+  git config --global --add safe.directory "$INSTALL_DIR"
 
   cd "$INSTALL_DIR"
 
   OLD_COMMIT=$(git rev-parse HEAD)
-  echo "📌 Current version: $OLD_COMMIT"
 
   echo "📥 Fetching updates…"
   git fetch origin
 
   if git merge --ff-only origin/main; then
+    # Update VERSION file in case new version changed it
+    if [[ -f "$VERSION_FILE" ]]; then
+      NEW_VERSION=$(<"$VERSION_FILE")
+    else
+      NEW_VERSION="unknown"
+    fi
     echo "✅ Update successful!"
-    echo "🆕 New version: $(git rev-parse HEAD)"
+    echo "🆕 New version: $NEW_VERSION"
   else
     echo "❌ Update failed! Rolling back…"
     git reset --hard "$OLD_COMMIT"
-    echo "↩ Rolled back to $OLD_COMMIT"
+    echo "↩ Rolled back to $CURRENT_VERSION"
     exit 1
   fi
 }
