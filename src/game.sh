@@ -1393,7 +1393,6 @@ update() {
     INSTALL_DIR="/usr/local/share/Star-runner"
     VERSION_FILE="$INSTALL_DIR/VERSION"
 
-    # Make sure we are in the correct directory
     if [[ ! -d "$INSTALL_DIR" ]]; then
         echo "❌ Star-runner is not installed in $INSTALL_DIR"
         exit 1
@@ -1401,13 +1400,12 @@ update() {
 
     cd "$INSTALL_DIR"
 
-    # Ensure git can write
+    # Make Git trust this repo
     git config --global --add safe.directory "$INSTALL_DIR"
 
-    # Read current version safely
+    # Read current version using cat
     if [[ -f "$VERSION_FILE" ]]; then
-        CURRENT_VERSION=$(<"$VERSION_FILE")
-        CURRENT_VERSION="${CURRENT_VERSION//$'\n'/}"  # strip newline
+        CURRENT_VERSION=$(cat "$VERSION_FILE" | tr -d '\n')  # strip newline
     else
         CURRENT_VERSION="unknown"
     fi
@@ -1425,8 +1423,7 @@ update() {
     if git merge --ff-only origin/main; then
         # Read new version after update
         if [[ -f "$VERSION_FILE" ]]; then
-            NEW_VERSION=$(<"$VERSION_FILE")
-            NEW_VERSION="${NEW_VERSION//$'\n'/}"  # strip newline
+            NEW_VERSION=$(cat "$VERSION_FILE" | tr -d '\n')
         else
             NEW_VERSION="$CURRENT_VERSION"
         fi
