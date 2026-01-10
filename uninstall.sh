@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-APP_NAME="star-runner"
+APP_NAME="Star-runner"
 INSTALL_SHARE="/usr/local/share/$APP_NAME"
 INSTALL_BIN="/usr/local/bin/$APP_NAME"
 
