@@ -1,0 +1,23 @@
+# Ignore compiled/built releases
+Release/*.tar.gz
+Release/*.zip
+Release
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore editor files
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+*.vscode/
+.idea/
+
+# Ignore logs
+*.log
+
+# Ignore temporary files
+*.tmp
+*.bak
