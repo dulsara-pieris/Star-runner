@@ -488,7 +488,7 @@ EOF
   printf "  ${COLOR_YELLOW}[2]${COLOR_NEUTRAL} Hangar (Ships & Skins)\n"
   printf "  ${COLOR_MAGENTA}[3]${COLOR_NEUTRAL} View Stats\n"
   printf "  ${COLOR_CYAN}[4]${COLOR_NEUTRAL} Help\n"
-  printf "  ${COLOR_CYAN}[5]${COLOR_NEUTRAL} Update\n\n"
+  printf "  ${COLOR_NEUTRSL}[5]${COLOR_NEUTRAL} Update\n"
   printf "  ${COLOR_RED}[6]${COLOR_NEUTRAL} Quit\n\n"
   printf "  Select option: "
   
