@@ -1389,57 +1389,56 @@ show_help() {
 
 update() {
     set -e
-
     INSTALL_DIR="/usr/local/share/Star-runner"
     VERSION_FILE="$INSTALL_DIR/VERSION"
-
+    
     # Check if installed
     if [[ ! -d "$INSTALL_DIR" ]]; then
         echo "❌ Star-runner is not installed in $INSTALL_DIR"
         exit 1
     fi
-
+    
     cd "$INSTALL_DIR"
-
+    
     # Allow git as root
     git config --global --add safe.directory "$INSTALL_DIR"
-
-    # Read current version with sudo cat
+    
+    # Read current version
     if [[ -f "$VERSION_FILE" ]]; then
-        CURRENT_VERSION=$(sudo cat "$VERSION_FILE" | tr -d '\n')
+        CURRENT_VERSION=$(cat "$VERSION_FILE" 2>/dev/null | head -n1 | xargs)
+        [[ -z "$CURRENT_VERSION" ]] && CURRENT_VERSION="unknown"
     else
         CURRENT_VERSION="unknown"
     fi
-
+    
     echo "🔄 Updating Star-runner…"
     echo "📌 Current version: $CURRENT_VERSION"
-
+    
     # Save rollback point
     OLD_COMMIT=$(git rev-parse HEAD)
-
+    
     echo "📥 Fetching updates…"
     git fetch origin
-
+    
     # Fast-forward merge
     if git merge --ff-only origin/main; then
         # Read new version after update
         if [[ -f "$VERSION_FILE" ]]; then
-            NEW_VERSION=$(sudo cat "$VERSION_FILE" | tr -d '\n')
+            NEW_VERSION=$(cat "$VERSION_FILE" 2>/dev/null | head -n1 | xargs)
+            [[ -z "$NEW_VERSION" ]] && NEW_VERSION="unknown"
         else
-            NEW_VERSION="$CURRENT_VERSION"
+            NEW_VERSION="unknown"
         fi
-
+        
         echo "✅ Update successful!"
         echo "🆕 New version: $NEW_VERSION"
-
     else
         echo "❌ Update failed! Rolling back…"
         git reset --hard "$OLD_COMMIT"
-        echo "↩ Rolled back to $CURRENT_VERSION"
+        echo "↩️ Rolled back to $CURRENT_VERSION"
         exit 1
     fi
 }
-
 
 
 # Game variables
