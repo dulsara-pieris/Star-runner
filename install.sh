@@ -29,7 +29,7 @@ sudo tee /usr/local/bin/star-runner > /dev/null << 'EOF'
 exec /usr/local/share/Star-runner/src/game.sh "$@"
 EOF
 
-sudo chmod +x /usr/local/bin/Star-runner
+sudo chmod +x /usr/local/bin/star-runner
 
 echo "✔ star-runner installed!"
 echo "You can now run the game with: star-runner"
