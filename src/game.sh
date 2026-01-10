@@ -1235,6 +1235,7 @@ on_exit() {
   stty icanon echo
   
   printf "$COLOR_CYAN"
+  clear
   cat << "EOF"
 
     ███████╗████████╗ █████╗ ██████╗     ██████╗ ██╗   ██╗███╗   ██╗███╗   ██╗███████╗██████╗ 
