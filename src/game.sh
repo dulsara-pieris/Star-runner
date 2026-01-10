@@ -7,6 +7,12 @@
 
 # STAR RUNNER ENHANCED - Now with ship selection, shop, and skins!
 
+if [[ "$1" == "-u" || "$1" == "--update" ]]; then
+  if [[ $EUID -ne 0 ]]; then
+    exec sudo "$0" "$@"
+  fi
+fi
+
 #profile file
 SAVE_DIR="$HOME/.star_runner"
 PROFILE_FILE="$SAVE_DIR/player_profile"
