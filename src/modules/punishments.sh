@@ -72,47 +72,76 @@ restore_profile_after_punishment() {
 # Apply long-term punishment
 # ------------------------------
 apply_long_term_punishment() {
-    local current_time
     current_time=$(date +%s)
 
-    backup_profile_for_punishment
+    # Initialize level if not set
+    punishment_level=${punishment_level:-0}
 
-    if [ "$punishment_expires" -gt "$current_time" ]; then
-        # Escalate punishment
-        punishment_level=$((punishment_level + 1))
-    else
-        # First-time punishment or expired
-        punishment_level=1
+    # Backup original profile if first punishment
+    if [ "${#punishment_backup[@]}" -eq 0 ]; then
+        punishment_backup=("$player_name" "$player_gender" "$player_title" "$current_skin" "$current_ship" "$ammo")
     fi
-    local base_days=3
-    local days=$(( base_days * 2 ** (punishment_level - 1) ))
+
+    # Check if punishment is active
+    if [ "$punishment_expires" -gt "$current_time" ]; then
+        # Escalate
+        punishment_level=$((punishment_level + 1))
+
+        # Duration doubles each time
+        prev_days=${punishment_prev_days:-3}
+        days=$(( prev_days * 2 ))
+        punishment_prev_days=$days
+        punishment_expires=$((current_time + days*24*60*60))
+
+        # Flip gender/title every time
+        orig_gender="${punishment_backup[1]}"
+        case "$orig_gender" in
+            "Male") player_gender="Female"; player_title="Madam" ;;
+            "Female") player_gender="Male"; player_title="Sir" ;;
+            *) player_gender="Alien"; player_title="Mx" ;;
+        esac
+
+        # Apply ugly skin, weakest ship, low ammo
+        player_name=${FUNNY_NAMES[$RANDOM % ${#FUNNY_NAMES[@]}]}
+        current_skin=${PUNISHMENT_SKINS[$RANDOM % ${#PUNISHMENT_SKINS[@]}]}
+        current_ship=1
+        ammo=$((ammo / 2))
+        [ "$ammo" -lt 1 ] && ammo=1
+
+        # Make name permanent if level >= 3
+        if [ "$punishment_level" -ge 3 ]; then
+            punishment_backup[0]="$player_name"
+        fi
+
+        save_profile
+        printf "$COLOR_RED ⚠ Punishment escalated! Level: $punishment_level, Name: $player_name, Gender: $player_gender, Duration: $days day(s) $COLOR_NEUTRAL\n"
+        return
+    fi
+
+    # First-time punishment
+    punishment_level=1
+    days=3
+    punishment_prev_days=$days
     punishment_expires=$((current_time + days*24*60*60))
 
-    # Flip gender/title based on original backup
-    case "$punishment_backup_gender" in
-        "Male")
-            player_gender="Female"
-            player_title="Madam"
-            ;;
-        "Female")
-            player_gender="Male"
-            player_title="Sir"
-            ;;
-        *)
-            player_gender="Alien"
-            player_title="Mx"
-            ;;
+    # Flip gender/title
+    case "$player_gender" in
+        "Male") player_gender="Female"; player_title="Madam" ;;
+        "Female") player_gender="Male"; player_title="Sir" ;;
+        *) player_gender="Alien"; player_title="Mx" ;;
     esac
 
-    # Apply funny name, ugly skin, slow ship
+    # Ugly skin, weak ship, low ammo
     player_name=${FUNNY_NAMES[$RANDOM % ${#FUNNY_NAMES[@]}]}
     current_skin=${PUNISHMENT_SKINS[$RANDOM % ${#PUNISHMENT_SKINS[@]}]}
     current_ship=1
-    ammo=$(get_ship_ammo "$current_ship")
+    ammo=$((ammo / 2))
+    [ "$ammo" -lt 1 ] && ammo=1
 
     save_profile
-    printf "$COLOR_RED ⚠ Punishment applied! Level: $punishment_level, Name: $player_name, Gender: $player_gender ($days day(s)) $COLOR_NEUTRAL\n"
+    printf "$COLOR_RED ⚠ Punishment applied for $days day(s)! Level: $punishment_level, Name: $player_name, Gender: $player_gender $COLOR_NEUTRAL\n"
 }
+
 
 # ------------------------------
 # Check if long-term punishment expired
