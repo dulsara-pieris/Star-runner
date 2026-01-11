@@ -22,6 +22,9 @@ source "$SCRIPT_DIR/modules/weapons.sh"
 source "$SCRIPT_DIR/modules/collision.sh"
 source "$SCRIPT_DIR/modules/input.sh"
 source "$SCRIPT_DIR/modules/effects.sh"
+source "$SCRIPT_DIR/modules/achievements.sh"
+
+init_achievements
 
 # Parse command-line arguments
 while :; do
