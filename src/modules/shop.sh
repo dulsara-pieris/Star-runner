@@ -3,213 +3,133 @@
 #SYNAPSNEX OSS-Protection License (SOPL) v1.0
 #Copyright (c) 2026 Dulsara Pieris
 
-# STAR RUNNER - Shop Module
-# Hangar (ship selection/purchase) and skin shop
+# =============================
+# STAR RUNNER - Ships Module
+# Defines all ships, stats, abilities, and utility functions
+# =============================
 
-# Show hangar - ship selection and purchase
-show_hangar() {
-  clear
-  printf "${COLOR_CYAN}╔═══════════════════════════════════════════════════════╗${COLOR_NEUTRAL}\n"
-  printf "${COLOR_CYAN}║${COLOR_NEUTRAL}                    HANGAR - SHIP SELECTION            ${COLOR_CYAN}║${COLOR_NEUTRAL}\n"
-  printf "${COLOR_CYAN}╚═══════════════════════════════════════════════════════╝${COLOR_NEUTRAL}\n\n"
-  printf "  ${COLOR_YELLOW}Crystal Bank: ${crystal_bank}💎${COLOR_NEUTRAL}\n\n"
-  
-  i=1
-  while [ $i -le 5 ]; do
-    ship_name=$(get_ship_name $i)
-    ship_icon=$(get_ship_icon $i)
-    ship_speed=$(get_ship_speed $i)
-    ship_ammo=$(get_ship_ammo $i)
-    ship_price=$(get_ship_price $i)
-    
-    if check_ownership "$i" "$owned_ships"; then
-      if [ "$current_ship" = "$i" ]; then
-        status="${COLOR_YELLOW}[EQUIPPED]${COLOR_NEUTRAL}"
-      else
-        status="${COLOR_GREEN}[OWNED]${COLOR_NEUTRAL}"
-      fi
-    else
-      status="${COLOR_RED}[LOCKED - ${ship_price}💎]${COLOR_NEUTRAL}"
-    fi
-    
-    printf "  ${COLOR_CYAN}[$i]${COLOR_NEUTRAL} $ship_icon $ship_name - Speed:$ship_speed Ammo:$ship_ammo $status\n"
-    i=$((i + 1))
-  done
-  
-  printf "\n  ${COLOR_GREEN}[E]${COLOR_NEUTRAL} Equip Ship | ${COLOR_YELLOW}[B]${COLOR_NEUTRAL} Buy Ship | ${COLOR_MAGENTA}[S]${COLOR_NEUTRAL} Skins | ${COLOR_WHITE}[R]${COLOR_NEUTRAL} Return\n"
-  printf "\n  Select option: "
-  
-  read -r hangar_choice
-  
-  case $hangar_choice in
-    [1-5])
-      if check_ownership "$hangar_choice" "$owned_ships"; then
-        current_ship=$hangar_choice
-        save_profile
-        printf "\n  ${COLOR_GREEN}✓ Ship equipped!${COLOR_NEUTRAL}\n"
-        sleep 1
-        show_hangar
-      else
-        printf "\n  ${COLOR_RED}✗ You don't own this ship!${COLOR_NEUTRAL}\n"
-        sleep 2
-        show_hangar
-      fi
-      ;;
-    [Bb])
-      printf "\n  Enter ship number to buy (1-5): "
-      read -r buy_ship
-      case $buy_ship in
-        [1-5])
-          if check_ownership "$buy_ship" "$owned_ships"; then
-            printf "\n  ${COLOR_YELLOW}You already own this ship!${COLOR_NEUTRAL}\n"
-            sleep 2
-          else
-            ship_price=$(get_ship_price "$buy_ship")
-            ship_name=$(get_ship_name "$buy_ship")
-            if [ "$crystal_bank" -ge "$ship_price" ]; then
-              crystal_bank=$((crystal_bank - ship_price))
-              owned_ships=$(add_to_owned "$buy_ship" "$owned_ships")
-              current_ship=$buy_ship
-              save_profile
-              printf "\n  ${COLOR_GREEN}✓ Purchased and equipped $ship_name!${COLOR_NEUTRAL}\n"
-              sleep 2
-            else
-              printf "\n  ${COLOR_RED}✗ Not enough crystals! Need: $ship_price, Have: $crystal_bank${COLOR_NEUTRAL}\n"
-              sleep 2
-            fi
-          fi
-          ;;
-      esac
-      show_hangar
-      ;;
-    [Ss])
-      show_skin_shop
-      ;;
-    [Ee])
-      printf "\n  Enter ship number to equip (1-5): "
-      read -r equip_ship
-      case $equip_ship in
-        [1-5])
-          if check_ownership "$equip_ship" "$owned_ships"; then
-            current_ship=$equip_ship
-            save_profile
-            printf "\n  ${COLOR_GREEN}✓ Ship equipped!${COLOR_NEUTRAL}\n"
-            sleep 1
-          else
-            printf "\n  ${COLOR_RED}✗ You don't own this ship!${COLOR_NEUTRAL}\n"
-            sleep 2
-          fi
-          ;;
-      esac
-      show_hangar
-      ;;
-    [Rr])
-      return
-      ;;
-    *)
-      show_hangar
-      ;;
+# -----------------------------
+# Ships Definition
+# -----------------------------
+declare -A ships
+
+# Format: [<id>_<property>]=value
+
+ships[1_name]="Scout"
+ships[1_icon]="▶"
+ships[1_speed]=2       # movement per tick
+ships[1_ammo]=20       # starting ammo
+ships[1_health]=50     # starting health
+ships[1_ability]="Speed Boost"
+ships[1_max_speed]=3
+
+ships[2_name]="Interceptor"
+ships[2_icon]="▷"
+ships[2_speed]=2
+ships[2_ammo]=25
+ships[2_health]=60
+ships[2_ability]="Double Shot"
+ships[2_max_speed]=3
+
+ships[3_name]="Frigate"
+ships[3_icon]="⊳"
+ships[3_speed]=1
+ships[3_ammo]=30
+ships[3_health]=80
+ships[3_ability]="Shield"
+ships[3_max_speed]=2
+
+ships[4_name]="Cruiser"
+ships[4_icon]="⊲"
+ships[4_speed]=1
+ships[4_ammo]=40
+ships[4_health]=100
+ships[4_ability]="Mega Bomb"
+ships[4_max_speed]=2
+
+ships[5_name]="Battleship"
+ships[5_icon]="⧐"
+ships[5_speed]=1
+ships[5_ammo]=50
+ships[5_health]=150
+ships[5_ability]="Invincible Burst"
+ships[5_max_speed]=1
+
+# -----------------------------
+# Getter Functions
+# -----------------------------
+get_ship_name() { echo "${ships[$1_name]}"; }
+get_ship_icon() { echo "${ships[$1_icon]}"; }
+get_ship_speed() { echo "${ships[$1_speed]}"; }
+get_ship_ammo() { echo "${ships[$1_ammo]}"; }
+get_ship_health() { echo "${ships[$1_health]}"; }
+get_ship_ability() { echo "${ships[$1_ability]}"; }
+get_ship_max_speed() { echo "${ships[$1_max_speed]}"; }
+
+# -----------------------------
+# Animated Ship Icon Frames
+# Optional: allows simple terminal animation
+# -----------------------------
+# frame: 1..3 (can expand)
+get_ship_icon_frame() {
+  local ship=$1
+  local frame=$2
+  case $ship in
+    1) # Scout
+      case $frame in
+        1) echo "▶" ;;
+        2) echo "➤" ;;
+        3) echo "▷" ;;
+      esac ;;
+    2) # Interceptor
+      case $frame in
+        1) echo "▷" ;;
+        2) echo "▹" ;;
+        3) echo "➤" ;;
+      esac ;;
+    3) # Frigate
+      case $frame in
+        1) echo "⊳" ;;
+        2) echo "⊵" ;;
+        3) echo "⊶" ;;
+      esac ;;
+    4) # Cruiser
+      case $frame in
+        1) echo "⊲" ;;
+        2) echo "⊳" ;;
+        3) echo "⊴" ;;
+      esac ;;
+    5) # Battleship
+      case $frame in
+        1) echo "⧐" ;;
+        2) echo "⯈" ;;
+        3) echo "⯆" ;;
+      esac ;;
+    *) echo "?" ;;
   esac
 }
 
-# Show skin shop - skin customization
-show_skin_shop() {
-  clear
-  printf "${COLOR_MAGENTA}╔═══════════════════════════════════════════════════════╗${COLOR_NEUTRAL}\n"
-  printf "${COLOR_MAGENTA}║${COLOR_NEUTRAL}                    SKIN CUSTOMIZATION                 ${COLOR_MAGENTA}║${COLOR_NEUTRAL}\n"
-  printf "${COLOR_MAGENTA}╚═══════════════════════════════════════════════════════╝${COLOR_NEUTRAL}\n\n"
-  printf "  ${COLOR_YELLOW}Crystal Bank: ${crystal_bank}💎${COLOR_NEUTRAL}\n\n"
-  
-  i=1
-  while [ $i -le 5 ]; do
-    skin_name=$(get_skin_name $i)
-    skin_color=$(get_skin_color $i)
-    skin_price=$(get_skin_price $i)
-    ship_icon=$(get_ship_icon "$current_ship")
-    
-    if check_ownership "$i" "$owned_skins"; then
-      if [ "$current_skin" = "$i" ]; then
-        status="${COLOR_YELLOW}[ACTIVE]${COLOR_NEUTRAL}"
-      else
-        status="${COLOR_GREEN}[OWNED]${COLOR_NEUTRAL}"
-      fi
-    else
-      status="${COLOR_RED}[LOCKED - ${skin_price}💎]${COLOR_NEUTRAL}"
-    fi
-    
-    printf "  ${COLOR_CYAN}[$i]${COLOR_NEUTRAL} ${skin_color}${ship_icon}${COLOR_NEUTRAL} $skin_name $status\n"
-    i=$((i + 1))
-  done
-  
-  printf "\n  ${COLOR_GREEN}[A]${COLOR_NEUTRAL} Apply Skin | ${COLOR_YELLOW}[B]${COLOR_NEUTRAL} Buy Skin | ${COLOR_WHITE}[R]${COLOR_NEUTRAL} Return\n"
-  printf "\n  Select option: "
-  
-  read -r skin_choice
-  
-  case $skin_choice in
-    [1-5])
-      if check_ownership "$skin_choice" "$owned_skins"; then
-        current_skin=$skin_choice
-        save_profile
-        printf "\n  ${COLOR_GREEN}✓ Skin applied!${COLOR_NEUTRAL}\n"
-        sleep 1
-        show_skin_shop
-      else
-        printf "\n  ${COLOR_RED}✗ You don't own this skin!${COLOR_NEUTRAL}\n"
-        sleep 2
-        show_skin_shop
-      fi
-      ;;
-    [Bb])
-      printf "\n  Enter skin number to buy (1-5): "
-      read -r buy_skin
-      case $buy_skin in
-        [1-5])
-          if check_ownership "$buy_skin" "$owned_skins"; then
-            printf "\n  ${COLOR_YELLOW}You already own this skin!${COLOR_NEUTRAL}\n"
-            sleep 2
-          else
-            skin_price=$(get_skin_price "$buy_skin")
-            skin_name=$(get_skin_name "$buy_skin")
-            if [ "$crystal_bank" -ge "$skin_price" ]; then
-              crystal_bank=$((crystal_bank - skin_price))
-              owned_skins=$(add_to_owned "$buy_skin" "$owned_skins")
-              current_skin=$buy_skin
-              save_profile
-              printf "\n  ${COLOR_GREEN}✓ Purchased and applied $skin_name skin!${COLOR_NEUTRAL}\n"
-              sleep 2
-            else
-              printf "\n  ${COLOR_RED}✗ Not enough crystals! Need: $skin_price, Have: $crystal_bank${COLOR_NEUTRAL}\n"
-              sleep 2
-            fi
-          fi
-          ;;
-      esac
-      show_skin_shop
-      ;;
-    [Aa])
-      printf "\n  Enter skin number to apply (1-5): "
-      read -r apply_skin
-      case $apply_skin in
-        [1-5])
-          if check_ownership "$apply_skin" "$owned_skins"; then
-            current_skin=$apply_skin
-            save_profile
-            printf "\n  ${COLOR_GREEN}✓ Skin applied!${COLOR_NEUTRAL}\n"
-            sleep 1
-          else
-            printf "\n  ${COLOR_RED}✗ You don't own this skin!${COLOR_NEUTRAL}\n"
-            sleep 2
-          fi
-          ;;
-      esac
-      show_skin_shop
-      ;;
-    [Rr])
-      show_hangar
-      ;;
-    *)
-      show_skin_shop
-      ;;
-  esac
+# -----------------------------
+# Utility: Display full ship info (for debug or HUD)
+# -----------------------------
+show_ship_info() {
+  local id=$1
+  echo "Ship: $(get_ship_name $id)"
+  echo "Icon: $(get_ship_icon $id)"
+  echo "Speed: $(get_ship_speed $id)"
+  echo "Ammo: $(get_ship_ammo $id)"
+  echo "Health: $(get_ship_health $id)"
+  echo "Ability: $(get_ship_ability $id)"
 }
+
+# -----------------------------
+# Example usage in game.sh:
+# current_ship=1
+# ship_name=$(get_ship_name "$current_ship")
+# ship_icon=$(get_ship_icon "$current_ship")
+# ship_speed=$(get_ship_speed "$current_ship")
+# ship_ammo=$(get_ship_ammo "$current_ship")
+# ship_health=$(get_ship_health "$current_ship")
+# ship_ability=$(get_ship_ability "$current_ship")
+# show_ship_info "$current_ship"
+# -----------------------------

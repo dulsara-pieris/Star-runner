@@ -3,12 +3,13 @@
 #SYNAPSNEX OSS-Protection License (SOPL) v1.0
 #Copyright (c) 2026 Dulsara Pieris
 
-# STAR RUNNER ENHANCED - Main Game Entry Point
+# =============================
+# STAR RUNNER ENHANCED - Main Game Entry
+# =============================
 
 # ------------------------------
 # Setup
 # ------------------------------
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source modules
@@ -19,6 +20,7 @@ source "$SCRIPT_DIR/modules/ships.sh"
 source "$SCRIPT_DIR/modules/skins.sh"
 source "$SCRIPT_DIR/modules/menu.sh"
 source "$SCRIPT_DIR/modules/shop.sh"
+source "$SCRIPT_DIR/modules/inventory.sh"  # <- Inventory module
 source "$SCRIPT_DIR/modules/render.sh"
 source "$SCRIPT_DIR/modules/entities.sh"
 source "$SCRIPT_DIR/modules/weapons.sh"
@@ -26,12 +28,17 @@ source "$SCRIPT_DIR/modules/collision.sh"
 source "$SCRIPT_DIR/modules/input.sh"
 source "$SCRIPT_DIR/modules/effects.sh"
 #source "$SCRIPT_DIR/modules/achievements.sh"
-source "$SCRIPT_DIR/modules/stats.sh"   # Optional: career stats module
+source "$SCRIPT_DIR/modules/stats.sh"
 
-# Init tamper-proof achievements
+# ------------------------------
+# Init profile and achievements
+# ------------------------------
+init_profile
 #init_achievements
 
+# ------------------------------
 # Parse CLI arguments
+# ------------------------------
 while :; do
   case "$1" in
     -h|--help) show_help; exit 0 ;;
@@ -44,50 +51,35 @@ while :; do
 done
 
 # ------------------------------
-# Game State
+# Show main menu (including hangar/skins)
 # ------------------------------
-ship_line=$((NUM_LINES / 2))
-ship_column=5
-paused=0
-asteroid_count=0
-crystal_active=0
-powerup_active=0
-laser_active=0
-laser2_active=0
-laser3_active=0
-shield_active=0
-shield_timer=0
-super_mode_active=0
-super_timer=0
-weapon_type=1
-weapon_timer=0
-frame=0
-score=0
-level=1
-speed_multiplier=0
-crystals_collected=0
-asteroids_destroyed=0
-
-# Load profile (high score, crystals, stats)
-init_profile
-
-# Show main menu
 show_main_menu
 
-# Set ammo based on selected ship
-current_ship=$((current_ship + 0))
-ammo=$(get_ship_ammo "$current_ship")
-ammo=$((ammo + 0))
+# ------------------------------
+# Ensure selected ship is valid
+# ------------------------------
+if ! check_ownership "$current_ship" "$owned_ships"; then
+  # Equip default ship if current_ship invalid
+  current_ship=1
+fi
 
+# Update ammo based on current ship
+ammo=$(get_ship_ammo "$current_ship")
+health=$(get_ship_health "$current_ship")
+
+# ------------------------------
 # Configure terminal input
+# ------------------------------
 stty -icanon -echo time $TURN_DURATION min 0
 
+# ------------------------------
 # Initialize screen
+# ------------------------------
 on_enter
 draw_border
 draw_ship
 
-# Show launch sequence
+# Launch sequence
 printf "$COLOR_CYAN"
 center_col=$((NUM_COLUMNS / 2 - 12))
 center_line=$((NUM_LINES / 2))
@@ -104,9 +96,23 @@ printf "                           "
 while true; do
   if [ "$paused" -eq 0 ]; then
     # --------------------------
-    # Player input
+    # Handle player input
     # --------------------------
     handle_input
+
+    # Check if inventory/hangar invoked
+    if [ "$inventory_open" -eq 1 ]; then
+      show_hangar       # Player can buy/equip ships
+      inventory_open=0  # Close after exit
+      # Update ammo/health after equipping new ship
+      ammo=$(get_ship_ammo "$current_ship")
+      health=$(get_ship_health "$current_ship")
+    fi
+
+    if [ "$skins_open" -eq 1 ]; then
+      show_skin_shop    # Player can buy/apply skins
+      skins_open=0
+    fi
 
     # --------------------------
     # Level progression
@@ -129,7 +135,7 @@ while true; do
     fi
 
     # --------------------------
-    # Background and spawning
+    # Background & spawning
     # --------------------------
     [ $((frame % 10)) -eq 0 ] && draw_stars
 
