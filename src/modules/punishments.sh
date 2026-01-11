@@ -80,6 +80,7 @@ apply_long_term_punishment() {
     # Backup original profile if first punishment
     if [ "${#punishment_backup[@]}" -eq 0 ]; then
         punishment_backup=("$player_name" "$player_gender" "$player_title" "$current_skin" "$current_ship" "$ammo")
+        last_flip_gender="$player_gender"  # track last flipped gender
     fi
 
     # Check if punishment is active
@@ -93,12 +94,23 @@ apply_long_term_punishment() {
         punishment_prev_days=$days
         punishment_expires=$((current_time + days*24*60*60))
 
-        # Flip gender/title every time
-        orig_gender="${punishment_backup[1]}"
-        case "$orig_gender" in
-            "Male") player_gender="Female"; player_title="Madam" ;;
-            "Female") player_gender="Male"; player_title="Sir" ;;
-            *) player_gender="Alien"; player_title="Mx" ;;
+        # Flip gender based on **last applied flip**
+        case "$last_flip_gender" in
+            "Male")
+                player_gender="Female"
+                player_title="Madam"
+                last_flip_gender="Female"
+                ;;
+            "Female")
+                player_gender="Male"
+                player_title="Sir"
+                last_flip_gender="Male"
+                ;;
+            *)
+                player_gender="Alien"
+                player_title="Mx"
+                last_flip_gender="Alien"
+                ;;
         esac
 
         # Apply ugly skin, weakest ship, low ammo
@@ -124,11 +136,11 @@ apply_long_term_punishment() {
     punishment_prev_days=$days
     punishment_expires=$((current_time + days*24*60*60))
 
-    # Flip gender/title
+    # Flip gender (opposite of current)
     case "$player_gender" in
-        "Male") player_gender="Female"; player_title="Madam" ;;
-        "Female") player_gender="Male"; player_title="Sir" ;;
-        *) player_gender="Alien"; player_title="Mx" ;;
+        "Male") player_gender="Female"; player_title="Madam"; last_flip_gender="Female" ;;
+        "Female") player_gender="Male"; player_title="Sir"; last_flip_gender="Male" ;;
+        *) player_gender="Alien"; player_title="Mx"; last_flip_gender="Alien" ;;
     esac
 
     # Ugly skin, weak ship, low ammo
