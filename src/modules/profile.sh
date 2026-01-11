@@ -123,13 +123,13 @@ verify_profile_integrity() {
 handle_tampered_profile() {
     clear
     printf "${COLOR_RED}╔═══════════════════════════════════════════════════════╗${COLOR_NEUTRAL}\n"
-    printf "${COLOR_RED}║${COLOR_NEUTRAL}                  ⚠️  SECURITY ALERT ⚠️                 ${COLOR_RED}║${COLOR_NEUTRAL}\n"
+    printf "${COLOR_RED}║${COLOR_NEUTRAL}                  ⚠️  SECURITY ALERT ⚠️                ${COLOR_RED}║${COLOR_NEUTRAL}\n"
     printf "${COLOR_RED}╚═══════════════════════════════════════════════════════╝${COLOR_NEUTRAL}\n\n"
-
     printf "  ${COLOR_YELLOW}Profile integrity check failed!${COLOR_NEUTRAL}\n"
     printf "  ${COLOR_RED}Your profile was modified or corrupted.${COLOR_NEUTRAL}\n\n"
     printf "  ${COLOR_CYAN}The profile will now be reset to protect game integrity.${COLOR_NEUTRAL}\n"
-    sleep 3
+    printf "${COLOR_CYAN}wait 6 seconds"
+    sleep 6
 
     rm -f "$PROFILE_FILE" "$CHECKSUM_FILE" 2>/dev/null
     create_new_profile
