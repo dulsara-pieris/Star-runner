@@ -161,7 +161,7 @@ show_help() {
 }
 
 # Update game from git repository
-u# Update game from git repository
+ printf "${COLOR_GREEN}Update game from git repository"
 update() {
   INSTALL_DIR="/usr/local/share/Star-runner"
   VERSION_FILE="$INSTALL_DIR/VERSION"
