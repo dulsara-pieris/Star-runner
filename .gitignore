@@ -1,7 +1,3 @@
-# Ignore compiled/built releases
-Release/*.tar.gz
-Release/*.zip
-
 # Ignore system files
 .DS_Store
 Thumbs.db
