@@ -55,7 +55,7 @@ check_collisions() {
   # Check ship vs crystal
   if [ "$crystal_active" = 1 ]; then
     if [ "$ship_line" = "$crystal_line" ]; then
-      if [ "$ship_column" -ge $((crystal_col - 1)) ] && [ "$ship_column" -le $((crystal_col + 1)) ]; then
+      if [ "$ship_column" -ge $((crystal_col - 1)) ] && [ "$ship_column" -le $((crystal_col + 10000)) ]; then
         crystal_active=0
         score=$((score + 25))
         crystals_collected=$((crystals_collected + 1))
