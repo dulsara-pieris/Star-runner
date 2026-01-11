@@ -55,14 +55,22 @@ restore_profile_after_punishment() {
 apply_long_term_punishment() {
     current_time=$(date +%s)
 
-    # Only apply if no active punishment
+    # Initialize level if not set
+    punishment_level=${punishment_level:-0}
+
+    # Backup original profile only if no backup exists
+    if [ "${#punishment_backup[@]}" -eq 0 ]; then
+        punishment_backup=("$player_name" "$player_gender" "$player_title" "$current_skin" "$current_ship" "$ammo")
+    fi
+
+    # Check if punishment is active
     if [ "$punishment_expires" -gt "$current_time" ]; then 
-        # Already under punishment: increase level & double time
+        # Escalate punishment
         punishment_level=$((punishment_level + 1))
         days=$((3 * punishment_level))
         punishment_expires=$((current_time + days*24*60*60))
-        
-        # Flip from ORIGINAL gender/title stored in backup
+
+        # Flip from ORIGINAL gender/title
         orig_gender="${punishment_backup[1]}"
         orig_title="${punishment_backup[2]}"
         case "$orig_gender" in
@@ -80,7 +88,7 @@ apply_long_term_punishment() {
                 ;;
         esac
 
-        # Change name/skin/ship/ammo again
+        # Re-apply punishment effects
         player_name=${FUNNY_NAMES[$RANDOM % ${#FUNNY_NAMES[@]}]}
         current_skin=${PUNISHMENT_SKINS[$RANDOM % ${#PUNISHMENT_SKINS[@]}]}
         current_ship=1
@@ -93,12 +101,10 @@ apply_long_term_punishment() {
 
     # First-time punishment
     punishment_level=1
-    backup_profile_for_punishment
-
     days=3
     punishment_expires=$((current_time + days*24*60*60))
 
-    # Flip gender/title
+    # Flip gender/title from current profile
     case "$player_gender" in
         "Male")
             player_gender="Female"
@@ -114,7 +120,7 @@ apply_long_term_punishment() {
             ;;
     esac
 
-    # Apply funny name and ugly skin/slow ship
+    # Apply funny name/skin/ship
     player_name=${FUNNY_NAMES[$RANDOM % ${#FUNNY_NAMES[@]}]}
     current_skin=${PUNISHMENT_SKINS[$RANDOM % ${#PUNISHMENT_SKINS[@]}]}
     current_ship=1
@@ -123,6 +129,7 @@ apply_long_term_punishment() {
     save_profile
     printf "$COLOR_RED ⚠ Punishment applied for $days day(s)! Level: $punishment_level, Name: $player_name, Gender: $player_gender $COLOR_NEUTRAL\n"
 }
+
 
 
 # ------------------------------
