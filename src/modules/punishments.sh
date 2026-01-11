@@ -48,9 +48,14 @@ restore_profile_after_punishment() {
 # ------------------------------
 apply_long_term_punishment() {
     current_time=$(date +%s)
+
     # Only apply if no active punishment
     if [ "$punishment_expires" -gt "$current_time" ]; then return; fi
 
+    # Ensure player_gender is set
+    player_gender="${player_gender:-Male}"
+
+    # Backup original profile (name, gender, skin, ship, ammo)
     backup_profile_for_punishment
 
     # Punishment duration in days
@@ -60,23 +65,27 @@ apply_long_term_punishment() {
     # Apply funny name
     player_name=${FUNNY_NAMES[$RANDOM % ${#FUNNY_NAMES[@]}]}
 
+    # Invert gender safely
     case "$player_gender" in
         "Male") player_gender="Female" ;;
         "Female") player_gender="Male" ;;
         *) 
-            # If unknown/other, pick a funny default for punishment
+            # Unknown gender: pick a funny default
             player_gender="Alien" 
             ;;
     esac
 
-    # Force hideous skin and ship
+    # Force hideous skin and slowest ship
     current_skin=${PUNISHMENT_SKINS[$RANDOM % ${#PUNISHMENT_SKINS[@]}]}
-    current_ship=1  # optionally force slowest ship
+    current_ship=1
     ammo=$(get_ship_ammo "$current_ship")
 
+    # Save changes to profile
     save_profile
+
     printf "$COLOR_RED ⚠ Punishment applied for $days day(s)! Name: $player_name, Gender: $player_gender $COLOR_NEUTRAL\n"
 }
+
 
 # ------------------------------
 # Check if long-term punishment expired
