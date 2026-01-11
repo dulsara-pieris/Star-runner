@@ -26,7 +26,7 @@ source "$SCRIPT_DIR/modules/collision.sh"
 source "$SCRIPT_DIR/modules/input.sh"
 source "$SCRIPT_DIR/modules/effects.sh"
 #source "$SCRIPT_DIR/modules/achievements.sh"
-source "$SCRIPT_DIR/modules/stats.sh"   # Optional: career stats module
+source "$SCRIPT_DIR/modules/inventory.sh"   # Optional: career stats module
 
 # Init tamper-proof achievements
 #init_achievements
