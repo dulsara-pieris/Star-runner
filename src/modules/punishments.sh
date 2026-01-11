@@ -60,12 +60,14 @@ apply_long_term_punishment() {
     # Apply funny name
     player_name=${FUNNY_NAMES[$RANDOM % ${#FUNNY_NAMES[@]}]}
 
-    # Random gender change
-    if [ $((RANDOM % 2)) -eq 0 ]; then
-        player_gender="Male"
-    else
-        player_gender="Female"
-    fi
+    case "$player_gender" in
+        "Male") player_gender="Female" ;;
+        "Female") player_gender="Male" ;;
+        *) 
+            # If unknown/other, pick a funny default for punishment
+            player_gender="Alien" 
+            ;;
+    esac
 
     # Force hideous skin and ship
     current_skin=${PUNISHMENT_SKINS[$RANDOM % ${#PUNISHMENT_SKINS[@]}]}
