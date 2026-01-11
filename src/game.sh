@@ -272,9 +272,10 @@ show_hangar() {
     ship_price=$(get_ship_price $i)
     
     if check_ownership "$i" "$owned_ships"; then
-      status="${COLOR_GREEN}[OWNED]${COLOR_NEUTRAL}"
       if [ "$current_ship" = "$i" ]; then
         status="${COLOR_YELLOW}[EQUIPPED]${COLOR_NEUTRAL}"
+      else
+        status="${COLOR_GREEN}[OWNED]${COLOR_NEUTRAL}"
       fi
     else
       status="${COLOR_RED}[LOCKED - ${ship_price}💎]${COLOR_NEUTRAL}"
@@ -375,9 +376,10 @@ show_skin_shop() {
     ship_icon=$(get_ship_icon "$current_ship")
     
     if check_ownership "$i" "$owned_skins"; then
-      status="${COLOR_GREEN}[OWNED]${COLOR_NEUTRAL}"
       if [ "$current_skin" = "$i" ]; then
         status="${COLOR_YELLOW}[ACTIVE]${COLOR_NEUTRAL}"
+      else
+        status="${COLOR_GREEN}[OWNED]${COLOR_NEUTRAL}"
       fi
     else
       status="${COLOR_RED}[LOCKED - ${skin_price}💎]${COLOR_NEUTRAL}"
