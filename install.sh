@@ -31,10 +31,13 @@ EOF
 
 sudo chmod +x /usr/local/bin/star-runner
 # Make sure files exist
+# Make sure files exist
 touch ~/.star_runner_profile ~/.star_runner_checksum
 
-# Give your user ownership
+# Give yourself ownership
 chown $USER:$USER ~/.star_runner_profile ~/.star_runner_checksum
+
+# Set read/write permissions for your user only
 chmod 600 ~/.star_runner_profile ~/.star_runner_checksum
 
 echo "✔ star-runner installed!"
