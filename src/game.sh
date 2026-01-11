@@ -5,10 +5,13 @@
 
 # STAR RUNNER ENHANCED - Main Game Entry Point
 
-# Get script directory
+# ------------------------------
+# Setup
+# ------------------------------
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Source all modules
+# Source modules
 source "$SCRIPT_DIR/modules/config.sh"
 source "$SCRIPT_DIR/modules/utils.sh"
 source "$SCRIPT_DIR/modules/profile.sh"
@@ -23,36 +26,26 @@ source "$SCRIPT_DIR/modules/collision.sh"
 source "$SCRIPT_DIR/modules/input.sh"
 source "$SCRIPT_DIR/modules/effects.sh"
 source "$SCRIPT_DIR/modules/achievements.sh"
+source "$SCRIPT_DIR/modules/stats.sh"   # Optional: career stats module
 
+# Init tamper-proof achievements
 init_achievements
 
-# Parse command-line arguments
+# Parse CLI arguments
 while :; do
   case "$1" in
-    -h|--help)
-      show_help
-      exit 0
-      ;;
-    -u|--update)
-      update
-      exit 0
-      ;;
-    --)
-      shift
-      break
-      ;;
-    -?*)
-      printf 'ERROR: Unknown option: %s\n' "$1" >&2
-      exit 1
-      ;;
-    *)
-      break
-      ;;
+    -h|--help) show_help; exit 0 ;;
+    -u|--update) update; exit 0 ;;
+    --) shift; break ;;
+    -?*) printf 'ERROR: Unknown option: %s\n' "$1" >&2; exit 1 ;;
+    *) break ;;
   esac
   shift
 done
 
-# Initialize game state variables
+# ------------------------------
+# Game State
+# ------------------------------
 ship_line=$((NUM_LINES / 2))
 ship_column=5
 paused=0
@@ -75,10 +68,10 @@ speed_multiplier=0
 crystals_collected=0
 asteroids_destroyed=0
 
-# Initialize or load player profile
+# Load profile (high score, crystals, stats)
 init_profile
 
-# Show main menu and wait for user to start
+# Show main menu
 show_main_menu
 
 # Set ammo based on selected ship
@@ -86,11 +79,13 @@ current_ship=$((current_ship + 0))
 ammo=$(get_ship_ammo "$current_ship")
 ammo=$((ammo + 0))
 
-# Configure terminal for game input
+# Configure terminal input
 stty -icanon -echo time $TURN_DURATION min 0
 
-# Initialize game screen
+# Initialize screen
 on_enter
+draw_border
+draw_ship
 
 # Show launch sequence
 printf "$COLOR_CYAN"
@@ -103,74 +98,111 @@ sleep 2
 move_cursor $center_line $center_col
 printf "                           "
 
-# Clear screen and draw initial state
-draw_border
-draw_ship
+# ------------------------------
+# Unlock first achievement immediately
+# ------------------------------
+unlock_achievement "First Flight"
 
-# ============================================================================
+# ------------------------------
 # MAIN GAME LOOP
-# ============================================================================
+# ------------------------------
 while true; do
-  if [ "$paused" = 0 ]; then
-    # Handle player input
+  if [ "$paused" -eq 0 ]; then
+    # --------------------------
+    # Player input
+    # --------------------------
     handle_input
-    
-    # Check for level progression
+
+    # --------------------------
+    # Level progression
+    # --------------------------
     new_level=$((score / 200 + 1))
     if [ "$new_level" -ne "$level" ]; then
       level=$new_level
       speed_multiplier=$((level - 1))
-      
-      # Show level up notification
+
+      # Level-up notification
       printf "$COLOR_GREEN"
       center_col=$((NUM_COLUMNS / 2 - 10))
       center_line=$((NUM_LINES / 2))
       move_cursor $center_line $center_col
       printf " ★ LEVEL $level ★ "
       printf "$COLOR_NEUTRAL"
+      sleep 1
+      move_cursor $center_line $center_col
+      printf "                      "
     fi
-    
-    # Draw background stars periodically
-    frame_mod_10=$((frame % 10))
-    if [ "$frame_mod_10" -eq 0 ]; then
-      draw_stars
-    fi
-    
-    # Spawn asteroids based on difficulty
+
+    # --------------------------
+    # Background and spawning
+    # --------------------------
+    [ $((frame % 10)) -eq 0 ] && draw_stars
+
     spawn_frequency=$((4 - speed_multiplier))
     [ "$spawn_frequency" -lt 2 ] && spawn_frequency=2
-    
-    frame_mod_spawn=$((frame % spawn_frequency))
-    if [ "$frame_mod_spawn" -eq 0 ]; then
-      spawn_asteroid
-    fi
-    
-    # Spawn collectibles periodically
-    frame_mod_20=$((frame % 20))
-    if [ "$frame_mod_20" -eq 0 ]; then
-      spawn_crystal
-      spawn_powerup
-    fi
-    
-    # Update all entity positions
+    [ $((frame % spawn_frequency)) -eq 0 ] && spawn_asteroid
+
+    [ $((frame % 20)) -eq 0 ] && { spawn_crystal; spawn_powerup; }
+
+    # --------------------------
+    # Update entities
+    # --------------------------
     move_asteroids
     move_crystal
     move_powerup
     move_laser
-    
-    # Check for collisions and interactions
+
+    # --------------------------
+    # Collisions & timers
+    # --------------------------
     check_laser_hits
     check_collisions
     update_timers
-    
-    # Render current frame
+
+    # --------------------------
+    # Render frame
+    # --------------------------
     draw_ship
     draw_hud
-    
-    # Increment frame counter
+
+    # --------------------------
+    # Increment frame
+    # --------------------------
     frame=$((frame + 1))
+
+    # --------------------------
+    # Auto-unlock achievements
+    # --------------------------
+    [ "$frame" -ge 600 ] && unlock_achievement "Survivor"
+    [ "$crystals_collected" -ge 100 ] && unlock_achievement "Collector"
+    [ "$score" -ge 1000 ] && unlock_achievement "Speed Runner"
+    [ "$asteroids_destroyed" -ge 50 ] && unlock_achievement "Asteroid Destroyer"
+    [ "$level" -ge 5 ] && unlock_achievement "Level Up"
+
+    # --------------------------
+    # Update career stats
+    # --------------------------
+    if [ "$score" -gt "$high_score" ]; then
+      high_score=$score
+    fi
+    total_crystals=$((total_crystals + crystals_collected))
+    total_asteroids=$((total_asteroids + asteroids_destroyed))
+    crystals_bank=$((crystals_bank + crystals_collected))
+
+    # Rank calculation
+    if [ "$high_score" -ge 1000 ]; then
+      rank="Star Pilot"
+    elif [ "$high_score" -ge 500 ]; then
+      rank="Space Cadet"
+    else
+      rank="Neural Trash"
+    fi
+
+    # Save stats periodically
+    save_profile
+
   else
-    # When paused, only handle input
+    # Paused: only handle input & draw ship
     handle_input
     draw_ship
   fi

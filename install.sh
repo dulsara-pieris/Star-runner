@@ -30,6 +30,14 @@ exec /usr/local/share/Star-runner/src/game.sh "$@"
 EOF
 
 sudo chmod +x /usr/local/bin/star-runner
+# Make sure files exist
+touch ~/.star_runner_profile ~/.star_runner_checksum
+
+# Give your user ownership
+chown $USER:$USER ~/.star_runner_profile ~/.star_runner_checksum
+
+# Give write permissions for the game
+chmod 600 ~/.star_runner_profile ~/.star_runner_checksum
 
 echo "✔ star-runner installed!"
 echo "You can now run the game with: star-runner"
