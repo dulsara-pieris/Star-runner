@@ -12,7 +12,6 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source modules
-source "$SCRIPT_DIR/modules/rap.sh"
 source "$SCRIPT_DIR/modules/config.sh"
 source "$SCRIPT_DIR/modules/utils.sh"
 source "$SCRIPT_DIR/modules/profile.sh"

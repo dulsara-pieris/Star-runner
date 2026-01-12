@@ -167,7 +167,5 @@ EOF
 
   printf "\n  ${COLOR_CYAN}Created by Dulsara(SYNAPSNEX)${COLOR_NEUTRAL}\n"
   printf "  ${COLOR_YELLOW}dulsara.synapsnex@gmail.com${COLOR_NEUTRAL}\n\n"
-  sleep 1
-  linux_super_rap()
   exit
 }
