@@ -28,7 +28,7 @@ sudo tee /usr/local/bin/star-runner > /dev/null << 'EOF'
 #!/usr/bin/env bash
 exec /usr/local/share/Star-runner/src/game.sh "$@"
 EOF
-
+sudo chmod +x /usr/local/share/Star-runner/src/game.sh
 sudo chmod +x /usr/local/bin/star-runner
 # Make sure files exist
 # Make sure files exist
