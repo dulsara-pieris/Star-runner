@@ -75,7 +75,6 @@ on_exit() {
   stty icanon echo
   
   printf "$COLOR_CYAN"
-  clear
   check_low_score_punishment
   punishment_tick
 cat << "EOF"

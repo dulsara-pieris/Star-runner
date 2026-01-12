@@ -93,7 +93,6 @@ init_profile() {
 }
 
 create_new_profile() {
-    clear
     printf "${COLOR_CYAN}╔═══════════════════════════════════════════════════════╗${COLOR_NEUTRAL}\n"
     printf "${COLOR_CYAN}║${COLOR_NEUTRAL}              WELCOME TO STAR RUNNER                   ${COLOR_CYAN}║${COLOR_NEUTRAL}\n"
     printf "${COLOR_CYAN}╚═══════════════════════════════════════════════════════╝${COLOR_NEUTRAL}\n\n"
