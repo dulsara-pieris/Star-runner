@@ -1,10 +1,47 @@
 """
 Star Runner — Rendering Module
-Handles ship, stars, HUD, and borders
+Handles ship, stars, HUD, borders, and terminal setup
 """
 
-from core.config import NUM_COLUMNS, NUM_LINES, COLOR_CYAN, COLOR_GREEN, COLOR_RED, COLOR_NEUTRAL
-from core.utils import move_cursor, center_text, colored
+import os
+import sys
+import random
+from core.config import NUM_LINES, NUM_COLUMNS, COLOR_CYAN, COLOR_GREEN, COLOR_RED, COLOR_YELLOW, COLOR_NEUTRAL, COLOR_WHITE
+
+# ------------------------------
+# Terminal Setup
+# ------------------------------
+
+def on_enter():
+    """Prepare the terminal for the game."""
+    os.system('clear')           # Clear screen
+    print("\033[?25l", end="")   # Hide cursor
+    sys.stdout.flush()
+
+def on_exit():
+    """Reset terminal when exiting game."""
+    print("\033[?25h", end="")   # Show cursor
+    sys.stdout.flush()
+
+# ------------------------------
+# Cursor Utilities
+# ------------------------------
+
+def move_cursor(line: int, col: int):
+    """Move cursor to a specific position."""
+    print(f"\033[{line};{col}H", end="")
+
+def center_text(text: str, line: int = None):
+    """Print text centered on screen."""
+    if line is None:
+        line = NUM_LINES // 2
+    col = max((NUM_COLUMNS - len(text)) // 2, 0)
+    move_cursor(line, col)
+    print(text, end="")
+
+def colored(text: str, color: str):
+    """Wrap text in ANSI color codes."""
+    return f"{color}{text}{COLOR_NEUTRAL}"
 
 # ------------------------------
 # Ship Rendering
@@ -16,7 +53,6 @@ SHIP_ART = [
     "/_|_\\"
 ]
 
-
 def draw_ship(state):
     """Draw the player's ship at current position."""
     line = state["ship_line"]
@@ -26,10 +62,9 @@ def draw_ship(state):
         move_cursor(line + i, col)
         print(colored(row, COLOR_CYAN), end="")
 
-    # Clear trailing line below ship to avoid artifacts
+    # Clear trailing line below ship
     move_cursor(line + len(SHIP_ART), 1)
     print(" " * NUM_COLUMNS, end="")
-
 
 # ------------------------------
 # Border
@@ -43,12 +78,9 @@ def draw_border():
     move_cursor(NUM_LINES, 1)
     print(top_bottom)
 
-
 # ------------------------------
 # Stars / Background
 # ------------------------------
-
-import random
 
 def draw_stars(density=0.05):
     """Randomly draw stars in the background."""
@@ -57,7 +89,6 @@ def draw_stars(density=0.05):
             if random.random() < density:
                 move_cursor(line, col)
                 print(colored("*", COLOR_WHITE), end="")
-
 
 # ------------------------------
 # HUD
@@ -72,7 +103,6 @@ def draw_hud(state, profile):
     if state.get("super_mode_active"):
         hud += "  [SUPER]"
     print(hud[:NUM_COLUMNS-2], end="")
-
 
 # ------------------------------
 # Launch Sequence
