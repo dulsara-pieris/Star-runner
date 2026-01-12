@@ -52,7 +52,7 @@ This will:
 | Spacebar   | Fire Laser (consumes 1 ammo)           |
 | P          | Pause and unpause                      |
 | Q          | Quit & Save Stats can recive           |
-|            | punishments                            |
+|              punishments                            |
 
 ---
 
