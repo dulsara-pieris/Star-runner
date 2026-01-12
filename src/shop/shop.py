@@ -86,3 +86,19 @@ def unlock_skin_item(profile):
             print("❌ Not enough crystals.")
     else:
         print("Invalid input.")
+
+def open_shop(profile):
+    """
+    Open the shop interface.
+    Currently a stub — prints available items.
+    """
+    items = [
+        {"name": "Extra Ammo", "price": 50},
+        {"name": "Shield Upgrade", "price": 100},
+        {"name": "Speed Boost", "price": 75}
+    ]
+    print("🛒 Welcome to the Star Runner Shop!")
+    for i, item in enumerate(items):
+        print(f"{i + 1}. {item['name']} — {item['price']} crystals")
+    
+    print("Shop is currently a stub. No purchases implemented yet.")
