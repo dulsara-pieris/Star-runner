@@ -1,36 +1,36 @@
 # 🚀 Star Runner
 
-**Star Runner** is a fast-paced, terminal-based arcade game written entirely in **Shell script**. Navigate your starship through a dangerous asteroid field, collect power crystals, and utilize special abilities to achieve the highest score in the galaxy.
+**Star Runner** is a **fast-paced, terminal-based arcade game** written entirely in **Bash**. Navigate your starship through a dangerous asteroid field, collect power crystals, and unleash special abilities to achieve the **highest score in the galaxy**.
 
 Developed by **Dulsara Pieris (SYNAPSNEX)**.
 
 ---
 
-## 🕹️ Game Features
+## 🕹️ Features
 
-* **Dynamic Gameplay:** Dodge asteroids of various sizes that move across your terminal in real-time.
-* **Career Profile System:** Automatically creates a persistent local profile (`~/.star_runner`) to track your name, age, high scores, total crystals, and career stats.
-* **Combat Mechanics:** Use your onboard laser system to blast obstacles (requires ammo).
+* **Dynamic Gameplay:** Dodge asteroids of various sizes in real-time.
+* **Career Profile System:** Persistent local profile (`~/.star_runner`) tracks your stats, high scores, crystals, and progress.
+* **Combat Mechanics:** Fire lasers to destroy obstacles (requires ammo management).
 * **Power-ups:**
 
-  * **☢ Shield:** Absorb a single hit without destroying your ship.
+  * **☢ Shield:** Absorb a single hit.
   * **◈ Super Mode:** Become invincible and destroy asteroids on contact.
   * **⊕ Ammo Pack:** Refill your laser reserves.
-* **Ranking System:** Progress from a **Neural Trash** to a legendary **NEXUS-ZERO // 01101001** based on your mission performance.
+* **Ranking System:** Advance from **Neural Trash** to **NEXUS-ZERO // 01101001** based on your performance.
 
 ---
 
 ## 🛠️ System Requirements
 
-* Unix-like environment: **Linux**, **macOS**, or **WSL (Windows Subsystem for Linux)**.
-* Standard utilities: `sh`, `stty`, `dd`, `od`.
-* A terminal window sized at least **40 columns x 20 lines**.
+* **OS:** Linux, macOS, or WSL (Windows Subsystem for Linux)
+* **Terminal Utilities:** `sh`, `stty`, `dd`, `od`
+* **Recommended Terminal Size:** At least **40 columns x 20 lines**
 
 ---
 
 ## ⚡ Installation
 
-Run the following command to install Star Runner:
+Install **Star Runner** with a single command:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/dulsara-pieris/Bash-game/main/install.sh | sudo bash
@@ -38,36 +38,43 @@ curl -sSL https://raw.githubusercontent.com/dulsara-pieris/Bash-game/main/instal
 
 This will:
 
-* Copy `game.sh` to `/usr/local/bin/star-runner` (or a similar path).
-* Set executable permissions.
-* Optionally create a config/profile folder at `~/.star_runner`.
+* Copy `game.sh` to `/usr/local/bin/star-runner`
+* Set executable permissions
+* Optionally create a config/profile folder at `~/.star_runner`
 
 ---
 
 ## 🎮 Controls
 
-| Key        | Action                                |
-| ---------- | ------------------------------------- |
-| Arrow Keys | Navigate ship (Up, Down, Left, Right) |
-| Spacebar   | Fire Laser (uses 1 ammo)              |
-| Q          | Quit & Save Stats                     |
+| Key        | Action                                 |
+| ---------- | -------------------------------------- |
+| Arrow Keys | Move your ship (Up, Down, Left, Right) |
+| Spacebar   | Fire Laser (consumes 1 ammo)           |
+| P          | Pause and unpause                      |
+| Q          | Quit & Save Stats can recive           |
+|            | punishments                            |
 
 ---
 
 ## 🏁 Quick Start
 
 1. Open your terminal.
-2. Run `star-runner` to start the game.
-3. Dodge asteroids, collect crystals, and climb the ranks!
-4. Quit with `Q` to save your progress.
+2. Run:
 
-> ⚠ Tip: Resize your terminal to **at least 40x20** for best gameplay experience.
+```bash
+star-runner
+```
+
+3. Dodge asteroids, collect crystals, and climb the ranks!
+4. Press `Q` to quit and save your progress.
+
+> ⚠ **Tip:** Resize your terminal to **at least 40x20** for the best experience.
 
 ---
 
 ## 🗑️ Uninstallation
 
-To remove the game and your profile:
+Remove the game and your profile:
 
 ```bash
 sudo ./uninstall.sh
@@ -79,16 +86,37 @@ rm -rf ~/.star_runner
 ## 📂 File Structure
 
 ```
-├── AUTHORS.md
-├── CODE_OF_CONDUCT.md
-├── install.sh
-├── LICENSE
-├── NOTICE.md
-├── README.md
-├── src/
-│   └── game.sh
-├── uninstall.sh
-└── VERSION
+├──  AUTHORS.md
+├──  CODE_OF_CONDUCT.md
+├──  install.sh
+├──  LICENSE
+├──  modules
+├──  NOTICE.md
+├──  README.md
+├──  Release
+│   ├──  0.1.0.md
+│   ├──  0.1.1.md
+│   └──  0.2.0.md
+├──  src
+│   ├──  game.sh
+│   └──  modules
+│       ├──  collision.sh
+│       ├──  config.sh
+│       ├──  effects.sh
+│       ├──  entities.sh
+│       ├──  input.sh
+│       ├──  inventory.sh
+│       ├──  menu.sh
+│       ├──  profile.sh
+│       ├──  punishments.sh
+│       ├──  render.sh
+│       ├──  ships.sh
+│       ├──  shop.sh
+│       ├──  skins.sh
+│       ├──  utils.sh
+│       └──  weapons.sh
+├──  uninstall.sh
+└──  VERSION
 ```
 
 ---
