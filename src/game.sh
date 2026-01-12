@@ -25,8 +25,11 @@ source "$SCRIPT_DIR/modules/weapons.sh"
 source "$SCRIPT_DIR/modules/collision.sh"
 source "$SCRIPT_DIR/modules/input.sh"
 source "$SCRIPT_DIR/modules/effects.sh"
-source "$SCRIPT_DIR/modules/punishments.sh"  # ← PUNISHMENT MODULE
-source "$SCRIPT_DIR/modules/inventory.sh"
+source "$SCRIPT_DIR/modules/punishments.sh"
+source "$SCRIPT_DIR/modules/inventory.sh"   # Optional: career stats module
+
+# Init tamper-proof achievements
+#init_achievements
 
 # Parse CLI arguments
 while :; do
@@ -64,13 +67,9 @@ level=1
 speed_multiplier=0
 crystals_collected=0
 asteroids_destroyed=0
-game_over=0
 
 # Load profile (high score, crystals, stats)
 init_profile
-
-# Check if long-term punishment is still active
-check_long_term_punishment
 
 # Show main menu
 show_main_menu
@@ -102,36 +101,12 @@ printf "                           "
 # ------------------------------
 # MAIN GAME LOOP
 # ------------------------------
-while [ "$game_over" -eq 0 ]; do
+while true; do
   if [ "$paused" -eq 0 ]; then
-    
-    # ========================================
-    # 1. PUNISHMENT SYSTEM TICK (FIRST!)
-    # ========================================
-    punishment_tick
-    
-    # ========================================
-    # 2. PROCESS INPUT WITH PUNISHMENT
-    # ========================================
-    # Read raw input
-    read -t 0.05 -n 1 raw_key
-    
-    # Process key through punishment system (reverses/modifies it)
-    key=$(process_punishment_key "$raw_key")
-    
-    # Now use your EXISTING handle_input with the modified key
-    # (handle_input will process the already-modified key)
+    # --------------------------
+    # Player input
+    # --------------------------
     handle_input
-    
-    # Handle pause/quit separately
-    case "$raw_key" in
-      p|P)
-        paused=1
-        ;;
-      q|Q)
-        game_over=1
-        ;;
-    esac
 
     # --------------------------
     # Level progression
@@ -167,6 +142,7 @@ while [ "$game_over" -eq 0 ]; do
     # --------------------------
     # Update entities
     # --------------------------
+    check_long_term_punishment
     move_asteroids
     move_crystal
     move_powerup
@@ -184,19 +160,6 @@ while [ "$game_over" -eq 0 ]; do
     # --------------------------
     draw_ship
     draw_hud
-
-    # ========================================
-    # PUNISHMENT CHECKS
-    # ========================================
-    # Check every 100 frames if punishment should trigger
-    if [ $((frame % 100)) -eq 0 ]; then
-      check_low_score_punishment
-    fi
-    
-    # Check every 500 frames if long-term punishment expired
-    if [ $((frame % 500)) -eq 0 ]; then
-      check_long_term_punishment
-    fi
 
     # --------------------------
     # Increment frame
@@ -222,72 +185,12 @@ while [ "$game_over" -eq 0 ]; do
       rank="Neural Trash"
     fi
 
-    # Save stats periodically (every 50 frames)
-    if [ $((frame % 50)) -eq 0 ]; then
-      save_profile
-    fi
+    # Save stats periodically
+    save_profile
 
   else
-    # ========================================
-    # PAUSED MODE
-    # ========================================
-    read -t 0.05 -n 1 pause_key
-    case "$pause_key" in
-      p|P)
-        paused=0
-        printf "$COLOR_CYAN"
-        center_col=$((NUM_COLUMNS / 2 - 5))
-        center_line=$((NUM_LINES / 2))
-        move_cursor $center_line $center_col
-        printf " RESUMED "
-        printf "$COLOR_NEUTRAL"
-        sleep 0.5
-        move_cursor $center_line $center_col
-        printf "         "
-        ;;
-      q|Q)
-        game_over=1
-        ;;
-    esac
+    # Paused: only handle input & draw ship
+    handle_input
     draw_ship
   fi
 done
-
-# ========================================
-# GAME OVER
-# ========================================
-clear
-printf "$COLOR_RED"
-center_col=$((NUM_COLUMNS / 2 - 10))
-center_line=$((NUM_LINES / 2 - 5))
-move_cursor $center_line $center_col
-printf "╔════════════════════╗"
-move_cursor $((center_line + 1)) $center_col
-printf "║   GAME OVER!       ║"
-move_cursor $((center_line + 2)) $center_col
-printf "║                    ║"
-move_cursor $((center_line + 3)) $center_col
-printf "║ Score: %-11s ║" "$score"
-move_cursor $((center_line + 4)) $center_col
-printf "║ Level: %-11s ║" "$level"
-move_cursor $((center_line + 5)) $center_col
-printf "╚════════════════════╝"
-printf "$COLOR_NEUTRAL"
-
-# Add to hall of shame if score is terrible
-check_and_add_to_shame
-
-# Show hall of shame
-move_cursor $((center_line + 7)) 0
-show_hall_of_shame
-
-# Final save
-save_profile
-
-# Restore terminal
-on_exit
-
-printf "\n\nThanks for playing STAR RUNNER!\n"
-printf "High Score: $high_score\n"
-printf "Crystals Earned: $crystals_collected\n"
-printf "Asteroids Destroyed: $asteroids_destroyed\n\n"
