@@ -30,6 +30,7 @@ exec /usr/local/share/Star-runner/src/game.sh "$@"
 EOF
 sudo chmod +x /usr/local/share/Star-runner/src/game.sh
 sudo chmod +x /usr/local/bin/star-runner
+sudo chmod -R +x /usr/local/share/Star-runner/src
 # Make sure files exist
 # Make sure files exist
 touch ~/.star_runner_profile ~/.star_runner_checksum
