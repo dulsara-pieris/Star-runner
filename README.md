@@ -1,5 +1,5 @@
 # 🚀 Star Runner
-## //WARNING: fully vibe coded
+## // WARNING: fully vibe coded(VIBE = VERY INPRODUCTIVE BUT EXCITING)
 
 **Star Runner** is a **fast-paced, terminal-based arcade game** written entirely in **Bash**. Navigate your starship through a dangerous asteroid field, collect power crystals, and unleash special abilities to achieve the **highest score in the galaxy**.
 
