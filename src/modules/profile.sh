@@ -154,6 +154,9 @@ load_profile() {
     current_ship=$((current_ship + 0))
     current_skin=$((current_skin + 0))
     player_birth_year=$((player_birth_year + 0))
+    punishment_level=$((punishment_level + 0))
+    punishment_expires=$((punishment_expires + 0))
+    punishment_prev_days=$((punishment_prev_days + 0))
 }
 
 save_profile() {
@@ -182,9 +185,8 @@ punishment_backup_title="$punishment_backup_title"
 punishment_backup_skin="$punishment_backup_skin"
 punishment_backup_ship="$punishment_backup_ship"
 punishment_backup_ammo="$punishment_backup_ammo"
+punishment_prev_days=$punishment_prev_days
 EOF
-}
-
     # Update checksum
     echo "$(generate_checksum)" > "$CHECKSUM_FILE"
     chmod 600 "$PROFILE_FILE" "$CHECKSUM_FILE"

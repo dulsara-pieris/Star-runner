@@ -153,6 +153,7 @@ while true; do
     # Update entities
     # --------------------------
     check_long_term_punishment
+    punishment_tick
     move_asteroids
     move_crystal
     move_powerup

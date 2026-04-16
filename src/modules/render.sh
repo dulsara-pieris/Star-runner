@@ -111,6 +111,11 @@ draw_hud() {
 
   move_cursor 3 5
   printf "MODE: $difficulty_name | COMBO: x$combo_streak"
+
+  if [ "$(type -t get_punishment_status_text)" = "function" ]; then
+    move_cursor 3 45
+    printf "PUNISH: %-14s" "$(get_punishment_status_text)"
+  fi
   
   col_offset=60
   
