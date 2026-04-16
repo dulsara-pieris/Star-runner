@@ -22,7 +22,9 @@ check_collisions() {
       
       if [ "$ship_line" = "$line" ]; then
         if [ "$ship_column" -ge "$col" ] && [ "$ship_column" -le $((col + size)) ]; then
-          if [ "$shield_active" = 1 ]; then
+          if [ "$grace_timer" -gt 0 ]; then
+            :
+          elif [ "$shield_active" = 1 ]; then
             # Shield absorbs hit
             shield_active=0
             eval "asteroid_${i}_active=0"
@@ -35,7 +37,7 @@ check_collisions() {
           elif [ "$super_mode_active" = 1 ]; then
             # Super mode destroys asteroid
             eval "asteroid_${i}_active=0"
-            score=$((score + 5))
+            add_score_points 5
             move_cursor "$line" "$col"
             case $size in
               1) printf "   " ;;
@@ -43,8 +45,21 @@ check_collisions() {
               3) printf "     " ;;
             esac
           else
-            # Game over
-            on_game_over
+            # Lose one life before game over
+            player_lives=$((player_lives - 1))
+            grace_timer=12
+            reset_combo
+            eval "asteroid_${i}_active=0"
+            move_cursor "$line" "$col"
+            case $size in
+              1) printf "   " ;;
+              2) printf "    " ;;
+              3) printf "     " ;;
+            esac
+
+            if [ "$player_lives" -le 0 ]; then
+              on_game_over
+            fi
           fi
         fi
       fi
@@ -57,7 +72,7 @@ check_collisions() {
     if [ "$ship_line" = "$crystal_line" ]; then
       if [ "$ship_column" -ge $((crystal_col - 1)) ] && [ "$ship_column" -le $((crystal_col + 1)) ]; then
         crystal_active=0
-        score=$((score + 25))
+        add_score_points 25
         crystals_collected=$((crystals_collected + 1))
         ammo=$((ammo + 5))
       fi
@@ -84,7 +99,7 @@ check_collisions() {
           3)
             # Ammo pack
             ammo=$((ammo + 10))
-            score=$((score + 20))
+            add_score_points 20
             ;;
           4)
             # Spread shot weapon

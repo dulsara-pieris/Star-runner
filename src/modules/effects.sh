@@ -35,4 +35,9 @@ update_timers() {
       weapon_timer=0
     fi
   fi
+
+  # Post-hit grace window
+  if [ "$grace_timer" -gt 0 ]; then
+    grace_timer=$((grace_timer - 1))
+  fi
 }

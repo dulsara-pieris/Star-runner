@@ -45,6 +45,40 @@ add_to_owned() {
   fi
 }
 
+# Add score with difficulty multiplier
+add_score_points() {
+  base_points=$1
+  points=$((base_points * score_multiplier))
+  score=$((score + points))
+  last_points=$points
+}
+
+# Reset active combo
+reset_combo() {
+  combo_streak=0
+  combo_timer=0
+}
+
+# Register a destroyed asteroid and reward combo bonus points
+register_asteroid_destroy() {
+  asteroid_type=$1
+  if [ "$asteroid_type" = 2 ]; then
+    add_score_points 20
+  else
+    add_score_points 10
+  fi
+
+  asteroids_destroyed=$((asteroids_destroyed + 1))
+  combo_streak=$((combo_streak + 1))
+  combo_timer=0
+
+  if [ "$combo_streak" -ge 3 ]; then
+    combo_bonus=$((combo_streak * 2))
+    score=$((score + combo_bonus))
+    last_points=$((last_points + combo_bonus))
+  fi
+}
+
 # Initialize game screen and settings
 on_enter() {
   hide_cursor

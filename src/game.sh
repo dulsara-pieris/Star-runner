@@ -57,6 +57,7 @@ laser2_active=0
 laser3_active=0
 shield_active=0
 shield_timer=0
+grace_timer=0
 super_mode_active=0
 super_timer=0
 weapon_type=1
@@ -67,6 +68,15 @@ level=1
 speed_multiplier=0
 crystals_collected=0
 asteroids_destroyed=0
+combo_streak=0
+combo_timer=0
+last_points=0
+
+# Accessibility + challenge tuning
+difficulty_name="Classic"
+score_multiplier=1
+spawn_floor=2
+player_lives=2
 
 # Load profile (high score, crystals, stats)
 init_profile
@@ -134,7 +144,7 @@ while true; do
     [ $((frame % 10)) -eq 0 ] && draw_stars
 
     spawn_frequency=$((4 - speed_multiplier))
-    [ "$spawn_frequency" -lt 2 ] && spawn_frequency=2
+    [ "$spawn_frequency" -lt "$spawn_floor" ] && spawn_frequency=$spawn_floor
     [ $((frame % spawn_frequency)) -eq 0 ] && spawn_asteroid
 
     [ $((frame % 20)) -eq 0 ] && { spawn_crystal; spawn_powerup; }
@@ -155,6 +165,14 @@ while true; do
     check_collisions
     update_timers
 
+    # Combo timeout
+    if [ "$combo_streak" -gt 0 ]; then
+      combo_timer=$((combo_timer + 1))
+      if [ "$combo_timer" -ge 18 ]; then
+        reset_combo
+      fi
+    fi
+
     # --------------------------
     # Render frame
     # --------------------------
@@ -172,22 +190,6 @@ while true; do
     if [ "$score" -gt "$high_score" ]; then
       high_score=$score
     fi
-    total_crystals=$((total_crystals + crystals_collected))
-    total_asteroids=$((total_asteroids + asteroids_destroyed))
-    crystals_bank=$((crystals_bank + crystals_collected))
-
-    # Rank calculation
-    if [ "$high_score" -ge 1000 ]; then
-      rank="Star Pilot"
-    elif [ "$high_score" -ge 500 ]; then
-      rank="Space Cadet"
-    else
-      rank="Neural Trash"
-    fi
-
-    # Save stats periodically
-    save_profile
-
   else
     # Paused: only handle input & draw ship
     handle_input

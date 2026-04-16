@@ -11,6 +11,8 @@ Developed by **Dulsara Pieris (SYNAPSNEX)**.
 * **Dynamic Gameplay:** Dodge asteroids of various sizes in real-time.
 * **Career Profile System:** Persistent local profile (`~/.star_runner`) tracks your stats, high scores, crystals, and progress.
 * **Combat Mechanics:** Fire lasers to destroy obstacles (requires ammo management).
+* **Difficulty Modes:** Pick **Chill**, **Classic**, or **Chaos** to match your skill level.
+* **Combo Scoring:** Destroy asteroids in streaks to earn bonus points.
 * **Power-ups:**
 
   * **☢ Shield:** Absorb a single hit.
@@ -52,6 +54,11 @@ This will:
 | Spacebar   | Fire Laser (consumes 1 ammo)               |
 | P          | Pause and unpause                          |
 | Q          | Quit & Save Stats can recive punishments   |
+
+Pick a difficulty from the main menu before launching:
+- **Chill:** 3 lives, slower pace
+- **Classic:** 2 lives, balanced pace
+- **Chaos:** 1 life, fast pace, 2x score multiplier
 
 ---
 
