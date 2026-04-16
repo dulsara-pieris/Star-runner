@@ -54,6 +54,16 @@ CHAOS_MODE=0
 DIZZY_MODE=0
 BLIND_MODE=0
 
+# Fun challenge state (mini objectives during punishment)
+PUNISHMENT_CHALLENGE_ACTIVE=0
+PUNISHMENT_CHALLENGE_TYPE=""
+PUNISHMENT_CHALLENGE_TARGET=0
+PUNISHMENT_CHALLENGE_BASE_SCORE=0
+PUNISHMENT_CHALLENGE_BASE_CRYSTALS=0
+PUNISHMENT_CHALLENGE_BASE_ASTEROIDS=0
+PUNISHMENT_CHALLENGE_PROGRESS=0
+PUNISHMENT_CHALLENGE_TEXT=""
+
 get_ship_pos_x() { echo "${ship_column:-${ship_x:-10}}"; }
 get_ship_pos_y() { echo "${ship_line:-${ship_y:-10}}"; }
 set_ship_pos_x() { ship_column="$1"; ship_x="$1"; }
@@ -309,6 +319,7 @@ apply_short_punishment() {
     esac
     
     flash_screen
+    start_punishment_challenge
 }
 
 # ============================================================================
@@ -360,12 +371,82 @@ get_punishment_status_text() {
     echo "P$punishment_level ${days}d ${hours}h"
 }
 
+start_punishment_challenge() {
+    PUNISHMENT_CHALLENGE_ACTIVE=1
+    PUNISHMENT_CHALLENGE_PROGRESS=0
+    PUNISHMENT_CHALLENGE_BASE_SCORE=${score:-0}
+    PUNISHMENT_CHALLENGE_BASE_CRYSTALS=${crystals_collected:-0}
+    PUNISHMENT_CHALLENGE_BASE_ASTEROIDS=${asteroids_destroyed:-0}
+
+    case $((RANDOM % 3)) in
+        0)
+            PUNISHMENT_CHALLENGE_TYPE="score"
+            PUNISHMENT_CHALLENGE_TARGET=$((50 + punishment_level * 10))
+            PUNISHMENT_CHALLENGE_TEXT="Gain +${PUNISHMENT_CHALLENGE_TARGET} score"
+            ;;
+        1)
+            PUNISHMENT_CHALLENGE_TYPE="crystals"
+            PUNISHMENT_CHALLENGE_TARGET=$((2 + punishment_level / 2))
+            PUNISHMENT_CHALLENGE_TEXT="Collect ${PUNISHMENT_CHALLENGE_TARGET} crystals"
+            ;;
+        *)
+            PUNISHMENT_CHALLENGE_TYPE="asteroids"
+            PUNISHMENT_CHALLENGE_TARGET=$((5 + punishment_level * 2))
+            PUNISHMENT_CHALLENGE_TEXT="Destroy ${PUNISHMENT_CHALLENGE_TARGET} asteroids"
+            ;;
+    esac
+}
+
+complete_punishment_challenge() {
+    PUNISHMENT_CHALLENGE_ACTIVE=0
+    ammo=$((ammo + 8))
+    shield_active=1
+    shield_timer=0
+
+    # Mercy reduction: reduce long-term punishment by 12h if active
+    local now
+    now=$(date +%s)
+    if [ "$punishment_expires" -gt "$now" ]; then
+        punishment_expires=$((punishment_expires - 12*60*60))
+        [ "$punishment_expires" -lt "$now" ] && punishment_expires="$now"
+    fi
+
+    echo -e "\033[32m ★ CHALLENGE CLEARED! +8 AMMO, SHIELD, -12h PUNISHMENT ★ \033[0m"
+}
+
+update_punishment_challenge() {
+    [ "$PUNISHMENT_CHALLENGE_ACTIVE" -eq 0 ] && return
+
+    case "$PUNISHMENT_CHALLENGE_TYPE" in
+        score)
+            PUNISHMENT_CHALLENGE_PROGRESS=$((score - PUNISHMENT_CHALLENGE_BASE_SCORE))
+            ;;
+        crystals)
+            PUNISHMENT_CHALLENGE_PROGRESS=$((crystals_collected - PUNISHMENT_CHALLENGE_BASE_CRYSTALS))
+            ;;
+        asteroids)
+            PUNISHMENT_CHALLENGE_PROGRESS=$((asteroids_destroyed - PUNISHMENT_CHALLENGE_BASE_ASTEROIDS))
+            ;;
+    esac
+
+    [ "$PUNISHMENT_CHALLENGE_PROGRESS" -lt 0 ] && PUNISHMENT_CHALLENGE_PROGRESS=0
+    if [ "$PUNISHMENT_CHALLENGE_PROGRESS" -ge "$PUNISHMENT_CHALLENGE_TARGET" ]; then
+        complete_punishment_challenge
+    fi
+}
+
+get_punishment_challenge_text() {
+    [ "$PUNISHMENT_CHALLENGE_ACTIVE" -eq 0 ] && { echo "No active challenge"; return; }
+    echo "${PUNISHMENT_CHALLENGE_TEXT} (${PUNISHMENT_CHALLENGE_PROGRESS}/${PUNISHMENT_CHALLENGE_TARGET})"
+}
+
 # ============================================================================
 # PUNISHMENT TICK - CALL EVERY FRAME
 # ============================================================================
 
 punishment_tick() {
     [ "$PUNISHMENT_ACTIVE" -eq 0 ] && [ "$punishment_level" -eq 0 ] && return
+    [ "$PUNISHMENT_CHALLENGE_ACTIVE" -eq 0 ] && start_punishment_challenge
     
     # DRUNK MODE - random drift
     if [ "$DRUNK_MODE" -eq 1 ] && [ $((RANDOM % 3)) -eq 0 ]; then
@@ -430,6 +511,8 @@ punishment_tick() {
             echo -e "\033[32m ✓ Short punishment ended! \033[0m"
         fi
     fi
+
+    update_punishment_challenge
 }
 
 # ============================================================================
@@ -497,6 +580,7 @@ check_and_add_to_shame() {
 export -f handle_input_with_punishment
 export -f punishment_tick
 export -f get_punishment_status_text
+export -f get_punishment_challenge_text
 export -f check_low_score_punishment
 export -f check_long_term_punishment
 export -f check_and_add_to_shame

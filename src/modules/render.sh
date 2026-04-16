@@ -116,6 +116,11 @@ draw_hud() {
     move_cursor 3 45
     printf "PUNISH: %-14s" "$(get_punishment_status_text)"
   fi
+
+  if [ "$(type -t get_punishment_challenge_text)" = "function" ]; then
+    move_cursor 4 5
+    printf "CHALLENGE: %-70s" "$(get_punishment_challenge_text)"
+  fi
   
   col_offset=60
   
