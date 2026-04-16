@@ -15,6 +15,10 @@ handle_input() {
     key="${key##*[}"
   fi
 
+  if [ "$(type -t handle_input_with_punishment)" = "function" ]; then
+    key="$(handle_input_with_punishment "$key")"
+  fi
+
   # Get ship speed for movement - ensure it's a number
   current_ship=$((current_ship + 0))
   ship_speed=$(get_ship_speed "$current_ship")

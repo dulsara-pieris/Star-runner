@@ -34,6 +34,7 @@ PUNISHMENT_LEVEL=0
 # Long-term punishment
 punishment_level=${punishment_level:-0}
 punishment_expires=${punishment_expires:-0}
+punishment_prev_days=${punishment_prev_days:-0}
 
 # Backups
 punishment_backup_name="${punishment_backup_name:-}"
@@ -52,6 +53,41 @@ INVERTED_SCREEN=0
 CHAOS_MODE=0
 DIZZY_MODE=0
 BLIND_MODE=0
+
+get_ship_pos_x() { echo "${ship_column:-${ship_x:-10}}"; }
+get_ship_pos_y() { echo "${ship_line:-${ship_y:-10}}"; }
+set_ship_pos_x() { ship_column="$1"; ship_x="$1"; }
+set_ship_pos_y() { ship_line="$1"; ship_y="$1"; }
+get_max_width() { echo "${NUM_COLUMNS:-${WIDTH:-80}}"; }
+get_max_height() { echo "${NUM_LINES:-${HEIGHT:-25}}"; }
+
+sync_effects_from_level() {
+    REVERSE_CONTROLS=0
+    DRUNK_MODE=0
+    RANDOM_TELEPORT=0
+    CHAOS_MODE=0
+    DIZZY_MODE=0
+    BLIND_MODE=0
+    SHRINKING_SHIP=0
+    INVERTED_SCREEN=0
+
+    [ "$punishment_level" -ge 1 ] && DRUNK_MODE=1
+    [ "$punishment_level" -ge 2 ] && REVERSE_CONTROLS=1
+    [ "$punishment_level" -ge 3 ] && RANDOM_TELEPORT=1 && CHAOS_MODE=1
+    [ "$punishment_level" -ge 4 ] && DIZZY_MODE=1 && INVERTED_SCREEN=1
+    [ "$punishment_level" -ge 5 ] && BLIND_MODE=1 && SHRINKING_SHIP=1
+}
+
+calculate_punishment_days() {
+    case "${1:-1}" in
+        1) echo 3 ;;
+        2) echo 7 ;;
+        3) echo 14 ;;
+        4) echo 30 ;;
+        5) echo 60 ;;
+        *) echo 90 ;;
+    esac
+}
 
 # Names and titles
 LOSER_NAMES=(
@@ -142,9 +178,8 @@ apply_long_term_punishment() {
     # Escalate if already punished
     if [ "$punishment_expires" -gt "$current_time" ]; then
         punishment_level=$((punishment_level + 1))
-        local prev_days=${punishment_prev_days:-3}
-        local days=$((prev_days * 3))
-        [ "$days" -gt 90 ] && days=90
+        local days
+        days=$(calculate_punishment_days "$punishment_level")
         punishment_prev_days=$days
         punishment_expires=$((current_time + days*24*60*60))
     else
@@ -194,18 +229,7 @@ apply_long_term_punishment() {
     fi
     
     # Activate progressive effects
-    REVERSE_CONTROLS=0
-    DRUNK_MODE=0
-    RANDOM_TELEPORT=0
-    CHAOS_MODE=0
-    DIZZY_MODE=0
-    BLIND_MODE=0
-    
-    [ "$punishment_level" -ge 1 ] && DRUNK_MODE=1
-    [ "$punishment_level" -ge 2 ] && REVERSE_CONTROLS=1
-    [ "$punishment_level" -ge 3 ] && RANDOM_TELEPORT=1 && CHAOS_MODE=1
-    [ "$punishment_level" -ge 4 ] && DIZZY_MODE=1 && INVERTED_SCREEN=1
-    [ "$punishment_level" -ge 5 ] && BLIND_MODE=1 && SHRINKING_SHIP=1
+    sync_effects_from_level
     
     [ "$(type -t save_profile)" = "function" ] && save_profile
     
@@ -233,6 +257,8 @@ check_long_term_punishment() {
     local current_time=$(date +%s)
     if [ "$punishment_expires" -gt 0 ] && [ "$punishment_expires" -le "$current_time" ] && [ -n "$punishment_backup_name" ]; then
         restore_profile
+    elif [ "$punishment_expires" -gt "$current_time" ] && [ "$punishment_level" -gt 0 ]; then
+        sync_effects_from_level
     fi
 }
 
@@ -301,44 +327,37 @@ handle_input_with_punishment() {
     # REVERSE CONTROLS
     if [ "$REVERSE_CONTROLS" -eq 1 ]; then
         case "$key" in
-            w) key="s" ;;
-            s) key="w" ;;
-            a) key="d" ;;
-            d) key="a" ;;
+            A) key="B" ;;
+            B) key="A" ;;
+            C) key="D" ;;
+            D) key="C" ;;
         esac
     fi
     
     # DIZZY MODE - randomly swap directions
     if [ "$DIZZY_MODE" -eq 1 ] && [ $((RANDOM % 3)) -eq 0 ]; then
         case "$key" in
-            w) key="$(echo -e "w\ns\na\nd" | shuf -n1)" ;;
-            s) key="$(echo -e "w\ns\na\nd" | shuf -n1)" ;;
-            a) key="$(echo -e "w\ns\na\nd" | shuf -n1)" ;;
-            d) key="$(echo -e "w\ns\na\nd" | shuf -n1)" ;;
+            A|B|C|D) key="$(echo -e "A\nB\nC\nD" | shuf -n1)" ;;
         esac
     fi
-    
-    # Apply movement
-    case "$key" in
-        w|W)
-            [ "${ship_y:-10}" -gt 2 ] && ship_y=$((ship_y - 1))
-            ;;
-        s|S)
-            [ "${ship_y:-10}" -lt $((${HEIGHT:-25} - 3)) ] && ship_y=$((ship_y + 1))
-            ;;
-        a|A)
-            [ "${ship_x:-10}" -gt 2 ] && ship_x=$((ship_x - 1))
-            ;;
-        d|D)
-            [ "${ship_x:-10}" -lt $((${WIDTH:-80} - 10)) ] && ship_x=$((ship_x + 1))
-            ;;
-        " ")
-            [ "$(type -t shoot_bullet)" = "function" ] && shoot_bullet
-            ;;
-        q|Q)
-            game_over=1
-            ;;
-    esac
+
+    printf "%s" "$key"
+}
+
+get_punishment_time_left() {
+    local now=$(date +%s)
+    local left=$((punishment_expires - now))
+    [ "$left" -lt 0 ] && left=0
+    echo "$left"
+}
+
+get_punishment_status_text() {
+    local left
+    left=$(get_punishment_time_left)
+    [ "$left" -le 0 ] && { echo "CLEAR"; return; }
+    local days=$((left / 86400))
+    local hours=$(((left % 86400) / 3600))
+    echo "P$punishment_level ${days}d ${hours}h"
 }
 
 # ============================================================================
@@ -350,18 +369,29 @@ punishment_tick() {
     
     # DRUNK MODE - random drift
     if [ "$DRUNK_MODE" -eq 1 ] && [ $((RANDOM % 3)) -eq 0 ]; then
+        local max_w max_h ship_x ship_y
+        max_w=$(get_max_width)
+        max_h=$(get_max_height)
+        ship_x=$(get_ship_pos_x)
+        ship_y=$(get_ship_pos_y)
+
         ship_x=$((ship_x + (RANDOM % 3 - 1)))
         ship_y=$((ship_y + (RANDOM % 3 - 1)))
-        [ "${ship_y:-10}" -lt 2 ] && ship_y=2
-        [ "${ship_y:-10}" -gt $((${HEIGHT:-25} - 3)) ] && ship_y=$((HEIGHT - 3))
-        [ "${ship_x:-10}" -lt 2 ] && ship_x=2
-        [ "${ship_x:-10}" -gt $((${WIDTH:-80} - 10)) ] && ship_x=$((WIDTH - 10))
+        [ "$ship_y" -lt 3 ] && ship_y=3
+        [ "$ship_y" -gt $((max_h - 2)) ] && ship_y=$((max_h - 2))
+        [ "$ship_x" -lt 5 ] && ship_x=5
+        [ "$ship_x" -gt $((max_w - 10)) ] && ship_x=$((max_w - 10))
+        set_ship_pos_x "$ship_x"
+        set_ship_pos_y "$ship_y"
     fi
     
     # RANDOM TELEPORT
     if [ "$RANDOM_TELEPORT" -eq 1 ] && [ $((RANDOM % 25)) -eq 0 ]; then
-        ship_x=$((RANDOM % (${WIDTH:-80} - 15) + 5))
-        ship_y=$((RANDOM % (${HEIGHT:-25} - 8) + 4))
+        local max_w max_h
+        max_w=$(get_max_width)
+        max_h=$(get_max_height)
+        set_ship_pos_x $((RANDOM % (max_w - 15) + 5))
+        set_ship_pos_y $((RANDOM % (max_h - 8) + 4))
         echo -e "\033[33m ⚡ TELEPORTED! \033[0m"
         flash_screen
     fi
@@ -374,8 +404,11 @@ punishment_tick() {
     # BLIND MODE - clear parts of screen
     if [ "$BLIND_MODE" -eq 1 ] && [ $((RANDOM % 5)) -eq 0 ]; then
         for i in {1..5}; do
-            local blind_y=$((RANDOM % ${HEIGHT:-25}))
-            local blind_x=$((RANDOM % ${WIDTH:-80}))
+            local max_w max_h blind_y blind_x
+            max_w=$(get_max_width)
+            max_h=$(get_max_height)
+            blind_y=$((RANDOM % max_h))
+            blind_x=$((RANDOM % max_w))
             tput cup "$blind_y" "$blind_x" 2>/dev/null && printf "   "
         done
     fi
@@ -463,6 +496,7 @@ check_and_add_to_shame() {
 # ============================================================================
 export -f handle_input_with_punishment
 export -f punishment_tick
+export -f get_punishment_status_text
 export -f check_low_score_punishment
 export -f check_long_term_punishment
 export -f check_and_add_to_shame
