@@ -45,10 +45,10 @@ handle_input() {
         ship_column=$((ship_column - ship_speed))
       fi
       ;;
-    q) # Quit
+    q|Q) # Quit
       on_exit
       ;;
-    p) # Pause
+    p|P) # Pause
       toggle_pause
       ;;
     ' ') # Spacebar - fire weapon

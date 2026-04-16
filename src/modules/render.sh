@@ -77,6 +77,8 @@ draw_ship() {
     printf "${COLOR_CYAN}⟨${ship_color}${ship_icon}${COLOR_CYAN}⟩${COLOR_NEUTRAL}"
   elif [ "$super_mode_active" = 1 ]; then
     printf "${COLOR_YELLOW}⟨${ship_icon}⟩${COLOR_NEUTRAL}"
+  elif [ "$grace_timer" -gt 0 ] && [ $((grace_timer % 2)) -eq 0 ]; then
+    printf "${COLOR_RED}${ship_icon}${COLOR_NEUTRAL}"
   else
     printf "${ship_color}${ship_icon}${COLOR_NEUTRAL}"
   fi
@@ -103,6 +105,12 @@ draw_hud() {
   
   move_cursor 2 45
   printf "CRYSTALS: $crystals_collected"
+
+  move_cursor 2 64
+  printf "LIVES: $player_lives"
+
+  move_cursor 3 5
+  printf "MODE: $difficulty_name | COMBO: x$combo_streak"
   
   col_offset=60
   

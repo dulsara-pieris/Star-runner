@@ -137,13 +137,8 @@ check_laser_hits() {
               laser3_active=0
             fi
             
-            # Award points based on asteroid type
-            if [ "$type" = 2 ]; then
-              score=$((score + 20))  # UFO worth more
-            else
-              score=$((score + 10))  # Normal asteroid
-            fi
-            asteroids_destroyed=$((asteroids_destroyed + 1))
+            # Award points with combo support
+            register_asteroid_destroy "$type"
             
             # Clear asteroid
             move_cursor "$line" "$col"

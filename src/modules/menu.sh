@@ -29,6 +29,7 @@ EOF
   printf "  ${COLOR_MAGENTA}🏆 High Score: ${high_score}${COLOR_NEUTRAL}\n"
   printf "  ${COLOR_CYAN}Current Ship: $(get_ship_name "$current_ship")${COLOR_NEUTRAL} $(get_ship_icon "$current_ship")\n"
   printf "  ${COLOR_MAGENTA}Current Skin: $(get_skin_name "$current_skin")${COLOR_NEUTRAL}\n\n"
+  printf "  ${COLOR_WHITE}Difficulty: ${difficulty_name}${COLOR_NEUTRAL}\n\n"
   
   printf "${COLOR_CYAN}╔═══════════════════════════════════════════════════════╗${COLOR_NEUTRAL}\n"
   printf "${COLOR_CYAN}║${COLOR_NEUTRAL}                      MAIN MENU                        ${COLOR_CYAN}║${COLOR_NEUTRAL}\n"
@@ -38,7 +39,8 @@ EOF
   printf "  ${COLOR_MAGENTA}[3]${COLOR_NEUTRAL} View Stats\n"
   printf "  ${COLOR_CYAN}[4]${COLOR_NEUTRAL} Help\n"
   printf "  ${COLOR_NEUTRAL}[5]${COLOR_NEUTRAL} Update\n"
-  printf "  ${COLOR_RED}[6]${COLOR_NEUTRAL} Quit\n\n"
+  printf "  ${COLOR_WHITE}[6]${COLOR_NEUTRAL} Difficulty\n"
+  printf "  ${COLOR_RED}[7]${COLOR_NEUTRAL} Quit\n\n"
   printf "  Select option: "
   
   read -r menu_choice
@@ -68,11 +70,50 @@ EOF
       show_main_menu
       ;;
     6)
+      show_difficulty_menu
+      show_main_menu
+      ;;
+    7)
       printf "\n  ${COLOR_CYAN}Thanks for playing! Fly safe, pilot!${COLOR_NEUTRAL}\n\n"
       exit 0
       ;;
     *)
       show_main_menu
+      ;;
+  esac
+}
+
+# Set gameplay difficulty tuning
+show_difficulty_menu() {
+  clear
+  printf "${COLOR_CYAN}╔═══════════════════════════════════════════════════════╗${COLOR_NEUTRAL}\n"
+  printf "${COLOR_CYAN}║${COLOR_NEUTRAL}                  SELECT DIFFICULTY                    ${COLOR_CYAN}║${COLOR_NEUTRAL}\n"
+  printf "${COLOR_CYAN}╚═══════════════════════════════════════════════════════╝${COLOR_NEUTRAL}\n\n"
+
+  printf "  ${COLOR_GREEN}[1] Chill${COLOR_NEUTRAL}   - 3 lives, slower spawns, score x1\n"
+  printf "  ${COLOR_YELLOW}[2] Classic${COLOR_NEUTRAL} - 2 lives, balanced challenge, score x1\n"
+  printf "  ${COLOR_RED}[3] Chaos${COLOR_NEUTRAL}   - 1 life, faster spawns, score x2\n\n"
+  printf "  Select option: "
+
+  read -r difficulty_choice
+  case $difficulty_choice in
+    1)
+      difficulty_name="Chill"
+      player_lives=3
+      spawn_floor=3
+      score_multiplier=1
+      ;;
+    3)
+      difficulty_name="Chaos"
+      player_lives=1
+      spawn_floor=1
+      score_multiplier=2
+      ;;
+    *)
+      difficulty_name="Classic"
+      player_lives=2
+      spawn_floor=2
+      score_multiplier=1
       ;;
   esac
 }
@@ -138,7 +179,8 @@ show_help() {
   printf "${COLOR_GREEN}OBJECTIVE:${COLOR_NEUTRAL}\n"
   printf "  Navigate through space, dodge asteroids, collect crystals!\n"
   printf "  Destroy asteroids with your laser for bonus points.\n"
-  printf "  Game gets harder as you level up!\n\n"
+  printf "  Game gets harder as you level up!\n"
+  printf "  Destroy asteroids back-to-back to build combo bonus points.\n\n"
   printf "${COLOR_CYAN}COLLECTIBLES:${COLOR_NEUTRAL}\n"
   printf "  ${COLOR_CYAN}◇${COLOR_NEUTRAL}  Power Crystal - +25 points, +5 ammo, adds to bank!\n\n"
   printf "${COLOR_MAGENTA}POWER-UPS:${COLOR_NEUTRAL}\n"
@@ -157,6 +199,9 @@ show_help() {
   printf "${COLOR_YELLOW}DIFFICULTY:${COLOR_NEUTRAL}\n"
   printf "  Every 200 points = New Level\n"
   printf "  Higher levels = Faster asteroids + UFO enemies\n\n"
+  printf "${COLOR_WHITE}ACCESSIBILITY:${COLOR_NEUTRAL}\n"
+  printf "  Choose Chill / Classic / Chaos from the main menu\n"
+  printf "  More lives on Chill mode makes the game friendlier for new players.\n\n"
   printf "${COLOR_GREEN}Good luck, pilot! 🚀${COLOR_NEUTRAL}\n\n"
 }
 
