@@ -170,6 +170,12 @@ restore_profile() {
     CHAOS_MODE=0
     DIZZY_MODE=0
     BLIND_MODE=0
+
+    PUNISHMENT_CHALLENGE_ACTIVE=0
+    PUNISHMENT_CHALLENGE_TYPE=""
+    PUNISHMENT_CHALLENGE_TARGET=0
+    PUNISHMENT_CHALLENGE_PROGRESS=0
+    PUNISHMENT_CHALLENGE_TEXT=""
     
     [ "$(type -t save_profile)" = "function" ] && save_profile
     echo -e "\033[32m ✓ Punishment expired! Profile restored. \033[0m"
@@ -265,6 +271,8 @@ apply_long_term_punishment() {
 
 check_long_term_punishment() {
     local current_time=$(date +%s)
+    resolve_merged_punishment_state
+
     if [ "$punishment_expires" -gt 0 ] && [ "$punishment_expires" -le "$current_time" ] && [ -n "$punishment_backup_name" ]; then
         restore_profile
     elif [ "$punishment_expires" -gt "$current_time" ] && [ "$punishment_level" -gt 0 ]; then
@@ -331,9 +339,6 @@ handle_input_with_punishment() {
     
     # Empty input
     [ -z "$key" ] && return
-    
-    # Store original for comparison
-    local original_key="$key"
     
     # REVERSE CONTROLS
     if [ "$REVERSE_CONTROLS" -eq 1 ]; then
@@ -440,6 +445,18 @@ get_punishment_challenge_text() {
     echo "${PUNISHMENT_CHALLENGE_TEXT} (${PUNISHMENT_CHALLENGE_PROGRESS}/${PUNISHMENT_CHALLENGE_TARGET})"
 }
 
+resolve_merged_punishment_state() {
+    # Heals partially merged profile states where only some punishment fields exist
+    if [ "${punishment_level:-0}" -gt 0 ] && [ "${punishment_expires:-0}" -le 0 ]; then
+        punishment_level=0
+    fi
+
+    if [ "${punishment_expires:-0}" -gt 0 ] && [ -z "${punishment_backup_name:-}" ]; then
+        punishment_expires=0
+        punishment_level=0
+    fi
+}
+
 # ============================================================================
 # PUNISHMENT TICK - CALL EVERY FRAME
 # ============================================================================
@@ -508,6 +525,7 @@ punishment_tick() {
             BLIND_MODE=0
             SHRINKING_SHIP=0
             INVERTED_SCREEN=0
+            PUNISHMENT_CHALLENGE_ACTIVE=0
             echo -e "\033[32m ✓ Short punishment ended! \033[0m"
         fi
     fi
